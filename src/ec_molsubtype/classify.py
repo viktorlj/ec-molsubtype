@@ -94,7 +94,7 @@ def classify_sample(
             flags=flags + mmr_result.flags,
         )
 
-        return _finalize(result, meta)
+        return _finalize(result, meta, variants)
 
     elif best_pole and best_pole.tier == PoleTier.VUS:
         # VUS — do NOT auto-classify, but flag
@@ -142,7 +142,7 @@ def classify_sample(
             clinical_notes=clinical_notes,
             flags=flags,
         )
-        return _finalize(result, meta)
+        return _finalize(result, meta, variants)
     else:
         path.append(ClassificationStep(step=2, test="MMRd", result="negative"))
         flags.extend(mmr_result.flags)
@@ -173,7 +173,7 @@ def classify_sample(
             clinical_notes=clinical_notes,
             flags=flags,
         )
-        return _finalize(result, meta)
+        return _finalize(result, meta, variants)
     else:
         details = None
         if tp53_results:
@@ -204,13 +204,14 @@ def classify_sample(
     return _finalize(result, meta)
 
 
-def _finalize(result: ClassificationResult, meta) -> ClassificationResult:
+def _finalize(result: ClassificationResult, meta, variants=None) -> ClassificationResult:
     """Apply secondary evidence and finalize the result."""
     return update_result_with_evidence(
         result,
         tmb=meta.tmb,
         fraction_genome_altered=meta.fraction_genome_altered,
         signature_weights=meta.signature_weights,
+        variants=variants,
     )
 
 

@@ -91,18 +91,5 @@ def assess_signatures(
     )
 
 
-def assess_substitution_profile(
-    signature_weights: dict[str, float] | None,
-    subtype: MolecularSubtype,
-) -> dict[str, float | bool | None] | None:
-    """Assess substitution class fractions for POLE concordance.
-
-    This is specifically for POLEmut where C>A >20%, T>G >4%, C>G <0.6%.
-    Returns None if not applicable or data not available.
-    """
-    if subtype != MolecularSubtype.POLEmut or signature_weights is None:
-        return None
-
-    # These would typically come from the actual mutation spectrum, not signatures.
-    # For now, return None — this should be computed from the variant list directly.
-    return None
+    # Note: Substitution spectrum analysis (C>A, C>G, etc.) is handled by
+    # spectrum.py, which computes it directly from the variant list.

@@ -15,7 +15,9 @@
     "MMRd": {
       "expected_signatures": ["SBS6", "SBS15", "SBS21", "SBS26"],
       "signature_threshold": 0.05,
-      "expected_high_indel_fraction": true,
+      "substitution_profile": {
+        "indel_fraction_min": 0.15
+      },
       "description": "MMRd: SBS6/SBS15/SBS21/SBS26, high indel fraction"
     },
     "p53abn": {

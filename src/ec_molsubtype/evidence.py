@@ -9,8 +9,10 @@ from .models import (
     EvidenceItem,
     MolecularSubtype,
     SecondaryEvidence,
+    Variant,
 )
 from .signatures import assess_signatures
+from .spectrum import assess_spectrum
 from .tmb import assess_tmb
 
 
@@ -19,11 +21,34 @@ def compute_secondary_evidence(
     tmb: float | None = None,
     fraction_genome_altered: float | None = None,
     signature_weights: dict[str, float] | None = None,
+    variants: list[Variant] | None = None,
 ) -> SecondaryEvidence:
     """Compute all secondary evidence for a given subtype."""
     tmb_result = assess_tmb(tmb, subtype)
     cna_result = assess_cna(fraction_genome_altered, subtype)
     sig_result = assess_signatures(signature_weights, subtype)
+
+    # Compute substitution spectrum from variants (always available if variants provided)
+    spectrum_item = None
+    if variants is not None:
+        spec_result = assess_spectrum(variants, subtype)
+        spectrum_item = EvidenceItem(
+            concordant=spec_result.concordant,
+            details={
+                "description": spec_result.details,
+                "checks": spec_result.checks,
+                "n_snvs": spec_result.spectrum.n_snvs if spec_result.spectrum else 0,
+                "n_indels": spec_result.spectrum.n_indels if spec_result.spectrum else 0,
+                "indel_fraction": (
+                    round(spec_result.spectrum.indel_fraction, 4)
+                    if spec_result.spectrum else None
+                ),
+                "fractions": (
+                    {k: round(v, 4) for k, v in spec_result.spectrum.fractions.items()}
+                    if spec_result.spectrum else {}
+                ),
+            },
+        )
 
     return SecondaryEvidence(
         tmb=EvidenceItem(
@@ -47,6 +72,7 @@ def compute_secondary_evidence(
                 "description": sig_result.details,
             },
         ),
+        substitution_profile=spectrum_item,
     )
 
 
@@ -73,6 +99,7 @@ def compute_confidence(
         secondary_evidence.tmb,
         secondary_evidence.cna_burden,
         secondary_evidence.signatures,
+        secondary_evidence.substitution_profile,
     ]
 
     available = [e for e in evidence_items if e is not None and e.concordant is not None]
@@ -99,6 +126,7 @@ def update_result_with_evidence(
     tmb: float | None = None,
     fraction_genome_altered: float | None = None,
     signature_weights: dict[str, float] | None = None,
+    variants: list[Variant] | None = None,
 ) -> ClassificationResult:
     """Add secondary evidence and update confidence for a classification result."""
     secondary = compute_secondary_evidence(
@@ -106,6 +134,7 @@ def update_result_with_evidence(
         tmb=tmb,
         fraction_genome_altered=fraction_genome_altered,
         signature_weights=signature_weights,
+        variants=variants,
     )
     result.secondary_evidence = secondary
 
