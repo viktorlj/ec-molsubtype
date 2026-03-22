@@ -1,0 +1,34 @@
+{
+  "description": "Curated POLE exonuclease domain mutation (EDM) list for endometrial cancer molecular subtyping",
+  "exonuclease_domain": {
+    "exons": [9, 10, 11, 12, 13, 14],
+    "codon_range": [268, 471],
+    "note": "Mutations outside this domain are NOT classified as POLEmut"
+  },
+  "tier1": {
+    "description": "Established pathogenic hotspots with strong evidence",
+    "variants": {
+      "P286R": {"codon": 286, "exon": 9, "ref_aa": "P", "alt_aa": "R", "frequency": "most_common"},
+      "V411L": {"codon": 411, "exon": 13, "ref_aa": "V", "alt_aa": "L", "frequency": "second_most_common"},
+      "S297F": {"codon": 297, "exon": 9, "ref_aa": "S", "alt_aa": "F", "frequency": "recurrent"},
+      "A456P": {"codon": 456, "exon": 14, "ref_aa": "A", "alt_aa": "P", "frequency": "recurrent"},
+      "S459F": {"codon": 459, "exon": 14, "ref_aa": "S", "alt_aa": "F", "frequency": "recurrent"}
+    }
+  },
+  "tier2": {
+    "description": "Additional confirmed pathogenic variants from León-Castillo et al. scoring system",
+    "variants": {
+      "F367S": {"codon": 367, "exon": 11, "ref_aa": "F", "alt_aa": "S"},
+      "L424I": {"codon": 424, "exon": 13, "ref_aa": "L", "alt_aa": "I"},
+      "L424V": {"codon": 424, "exon": 13, "ref_aa": "L", "alt_aa": "V"},
+      "M444K": {"codon": 444, "exon": 13, "ref_aa": "M", "alt_aa": "K"},
+      "D368N": {"codon": 368, "exon": 11, "ref_aa": "D", "alt_aa": "N"},
+      "P286H": {"codon": 286, "exon": 9, "ref_aa": "P", "alt_aa": "H"}
+    }
+  },
+  "references": [
+    "León-Castillo et al. 2020 J Pathol - Interpretation of somatic POLE mutations in endometrial carcinoma",
+    "WHO Classification of Female Genital Tumours, 5th edition (2020)",
+    "TCGA 2013 endometrial cancer landmark study"
+  ]
+}

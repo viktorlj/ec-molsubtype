@@ -1,0 +1,33 @@
+{
+  "description": "MMR gene list and known pathogenic variants for MMRd assessment",
+  "mmr_genes": ["MLH1", "MSH2", "MSH6", "PMS2", "EPCAM"],
+  "msi_thresholds": {
+    "msi_h": 20.0,
+    "msi_l_min": 0.01,
+    "note": "MSI-H: >=20% unstable markers; MSI-L: >0% but <20%; MSS: 0%"
+  },
+  "known_pathogenic_hotspots": {
+    "MLH1": [
+      {"variant": "R100X", "type": "nonsense"},
+      {"variant": "S44F", "type": "missense"},
+      {"variant": "A681T", "type": "missense"}
+    ],
+    "MSH2": [
+      {"variant": "A636P", "type": "missense"}
+    ],
+    "MSH6": [
+      {"variant": "F1088fs", "type": "frameshift"}
+    ],
+    "PMS2": []
+  },
+  "truncating_is_pathogenic": true,
+  "biallelic_evidence": {
+    "description": "Biallelic inactivation (two hits: mutation + LOH, or two mutations) strongly supports MMRd",
+    "min_hits_for_biallelic": 2
+  },
+  "notes": [
+    "Single heterozygous MMR variants alone do NOT confirm somatic MMR deficiency",
+    "MLH1 promoter hypermethylation supports MMRd if available",
+    "IHC for MLH1/MSH2/MSH6/PMS2 recommended for Lynch syndrome screening"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "description": "TP53 pathogenic variant data for endometrial cancer molecular subtyping",
+  "dna_binding_domain": {
+    "codon_start": 102,
+    "codon_end": 292,
+    "description": "TP53 DNA-binding domain where most pathogenic missense mutations cluster"
+  },
+  "hotspots": {
+    "R175H": {"codon": 175, "ref_aa": "R", "alt_aa": "H", "domain": "L2_loop", "frequency": "very_common"},
+    "G245S": {"codon": 245, "ref_aa": "G", "alt_aa": "S", "domain": "L3_loop", "frequency": "common"},
+    "R248W": {"codon": 248, "ref_aa": "R", "alt_aa": "W", "domain": "L3_loop", "frequency": "very_common"},
+    "R248Q": {"codon": 248, "ref_aa": "R", "alt_aa": "Q", "domain": "L3_loop", "frequency": "very_common"},
+    "R249S": {"codon": 249, "ref_aa": "R", "alt_aa": "S", "domain": "L3_loop", "frequency": "common"},
+    "R273H": {"codon": 273, "ref_aa": "R", "alt_aa": "H", "domain": "H2_helix", "frequency": "very_common"},
+    "R273C": {"codon": 273, "ref_aa": "R", "alt_aa": "C", "domain": "H2_helix", "frequency": "common"},
+    "R282W": {"codon": 282, "ref_aa": "R", "alt_aa": "W", "domain": "H2_helix", "frequency": "common"}
+  },
+  "benign_polymorphisms": {
+    "P72R": {"codon": 72, "ref_aa": "P", "alt_aa": "R", "note": "Common benign polymorphism, NOT pathogenic"},
+    "R72P": {"codon": 72, "ref_aa": "R", "alt_aa": "P", "note": "Reverse notation of P72R polymorphism"}
+  },
+  "notes": [
+    "In clinical practice, p53 IHC (overexpression or null pattern) is the standard surrogate",
+    "TP53 sequencing and p53 IHC have ~92% concordance but are not identical",
+    "Truncating variants (nonsense, frameshift, splice-site) are considered pathogenic",
+    "Low-VAF subclonal variants should be filtered with caution"
+  ]
+}

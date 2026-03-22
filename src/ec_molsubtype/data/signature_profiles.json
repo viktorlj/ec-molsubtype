@@ -1,0 +1,32 @@
+{
+  "description": "Expected mutational signature profiles per molecular subtype",
+  "profiles": {
+    "POLEmut": {
+      "expected_signatures": ["SBS10a", "SBS10b"],
+      "signature_threshold": 0.1,
+      "substitution_profile": {
+        "C>A_min": 0.20,
+        "T>G_min": 0.04,
+        "C>G_max": 0.006,
+        "indel_fraction_max": 0.05
+      },
+      "description": "POLE ultramutated: SBS10a/SBS10b dominant, high C>A, low indels"
+    },
+    "MMRd": {
+      "expected_signatures": ["SBS6", "SBS15", "SBS21", "SBS26"],
+      "signature_threshold": 0.05,
+      "expected_high_indel_fraction": true,
+      "description": "MMRd: SBS6/SBS15/SBS21/SBS26, high indel fraction"
+    },
+    "p53abn": {
+      "expected_signatures": ["SBS1", "SBS5"],
+      "signature_threshold": 0.1,
+      "description": "p53abn: clock-like signatures SBS1/SBS5 dominant"
+    },
+    "NSMP": {
+      "expected_signatures": ["SBS1", "SBS5"],
+      "signature_threshold": 0.1,
+      "description": "NSMP: clock-like signatures SBS1/SBS5"
+    }
+  }
+}
