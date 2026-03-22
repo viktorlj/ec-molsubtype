@@ -102,3 +102,116 @@ Extract CNA segmentation data for EC MSK-IMPACT samples and quantify the relatio
 - `data/genie/ec_msk_cna_segments.tsv` — 197,258 rows, 11 MB
 - `data/genie/ec_msk_cin_metrics.tsv` — 4,037 rows
 - `data/genie/ec_msk_tp53_cin.tsv` — 4,037 rows (merged with TP53 status, OncoTree, TMB)
+
+## 2026-03-22: Literature review — MSI detection from panel MAF data (no BAM access)
+
+**Session context:** Claude Opus 4.6, ~20 min. Research task for MMRd classification strategy.
+
+### Objective
+Determine how to detect microsatellite instability (MSI) from panel sequencing variant calls (MAF format) when BAM files are not available, as is the case for AACR GENIE public data. Identify coding microsatellite (cMS) loci covered by MSK-IMPACT panels that can serve as MSI indicators.
+
+### Approach
+- PubMed literature search for MSI detection methods applicable to MAF/variant-call data
+- Web search for coding microsatellite loci coordinates and mutation frequencies
+- Cross-referenced MSI indicator genes against MSK-IMPACT 341/468/505 gene panels
+
+### Key papers identified
+
+1. **Middha et al. 2017** (PMID:30211344, DOI:10.1200/PO.17.00084) — MSK-IMPACT MSIsensor validation. 12,288 tumors on IMPACT468 (~1,000 microsatellites). MSIsensor score >= 10 defines MSI-H. 99.4% concordance with PCR/IHC for CRC and UEC. **Requires BAM files** — not applicable to MAF-only analysis.
+
+2. **Ziegler et al. 2025** (PMID:39746944, DOI:10.1038/s41467-024-54970-z) — MiMSI, deep learning MSI classifier for MSK-IMPACT. Higher sensitivity than MSIsensor at low tumor purity (0.895 vs 0.67). Also **requires BAM** (multiple instance learning on read-level features).
+
+3. **Wang & Liang 2018 — MSIpred** (PMID:30510242, DOI:10.1038/s41598-018-35682-z) — **Works from MAF only.** SVM with 22 features from mutation annotation data. Key features: Frame_Shift_Del, Frame_Shift_Ins, INDEL counts, SNP/indel ratios, all normalized per Mb. Accuracy >= 98% on TCGA WES data. Trained on exome data; may lose sensitivity on targeted panels due to reduced feature space. Python package: github.com/wangc29/MSIpred.
+
+4. **Kim JE et al. 2018 — I Index** (PMID:30389464, DOI:10.1016/j.jmoldx.2018.09.005) — Indel/total mutation ratio ("I index") for MSI detection from targeted NGS (382 CRC genes). I index >= 9% and somatic mutation load >= 40 detect MSI with high sensitivity/specificity. Also: mutated homopolymer genes >= 5 as criterion. **Works from variant calls.**
+
+5. **Cortes-Ciriano et al. 2017** (PMID:28585546, DOI:10.1038/ncomms15180) — Pan-cancer MSI portrait. Random forest on MSI event counts. Identifies recurrent cMS loci by tumor type. UCEC 28.3% MSI-H. Endometrial-enriched targets: JAK1, TFAM, SMC6. TGFBR2 only 5% in UCEC vs 80% in STAD.
+
+6. **Kim TM et al. 2013** (PMID:24209623, DOI:10.1016/j.cell.2013.10.015) — Landscape of MSI in CRC/EC genomes. Comprehensive coding MS loci catalog. Tumor-type specificity of frameshift targets.
+
+7. **Ballhausen et al. 2020** (PMID:32958755, DOI:10.1038/s41467-020-18514-5) — Shared frameshift mutation landscape. ReFrame tool. 41 cMS in 40 genes. ACVR2A 91% mutated in MSI CRC, median 18 cMS mutations per MSI EC tumor.
+
+8. **Hause et al. 2016** (PMID:27694933, DOI:10.1038/nm.4191) — Classification of MSI across 18 cancer types. MSI-specific instability signatures. MSI may be continuous rather than discrete.
+
+9. **Kawaguchi et al. 2009** (PMID:19787250, DOI:10.3892/ijo_00000411) — 11 candidate mononucleotide repeat target genes in MSI-H EC: hMSH6(C8), TGFBR2(A10), MSH3(A8), MBD4(A10), BAX(G8), PTEN(A6), HDAC2(A9), EPHB2(A9), CASP5(A10), TCF-4(A9), AXIN2(G7).
+
+10. **Ferreira et al. 2014** (PMID:25196364, DOI:10.1002/humu.22686) — RPL22 A(8) exon 2 mutations: 50% in MSI-H EC, 77% in MSI-H CRC.
+
+### Coding microsatellite (cMS) indicator loci — coverage on MSK-IMPACT
+
+| Gene | Repeat | Exon | MSI-H freq (EC) | 341 | 468 | 505 |
+|------|--------|------|-----------------|-----|-----|-----|
+| ACVR2A | A(8) x2 | Ex3+Ex10 | ~50-91% | NO | NO | NO |
+| TGFBR2 | A(10) | Ex3 | 5-36% | YES | YES | YES |
+| RNF43 | G(7) | coding | ~30-54% | YES | YES | YES |
+| MSH3 | A(8) | Ex1 | ~58% (CRC) | NO | YES | YES |
+| MSH6 | C(8) | Ex5 | 36% | YES | YES | YES |
+| RPL22 | A(8) | Ex2 | 50% | NO | NO | NO |
+| ARID1A | multiple | multiple | 40-73% | YES | YES | YES |
+| APC | multiple | Ex16 | varies | YES | YES | YES |
+| PTEN | A(6) | Ex7 | common | YES | YES | YES |
+| JAK1 | coding MS | multiple | enriched EC | YES | YES | YES |
+| AXIN2 | G(7) | coding | varies | YES | YES | YES |
+| MRE11A | T(11) | coding | common | YES | YES | YES |
+| B2M | coding MS | multiple | common | YES | YES | YES |
+| TCF7L2 | A(9) | coding | varies | NO | YES | YES |
+| KMT2C | coding MS | multiple | common | YES | YES | YES |
+| BAX | G(8) | coding | 23% (EC) | NO | NO | NO |
+| BMPR2 | coding MS | multiple | varies | NO | NO | NO |
+
+**Critical gap:** ACVR2A (the single best MSI indicator, 50-91% mutated in MSI-H) is NOT on any MSK-IMPACT panel. RPL22 (50% in EC) and BAX are also absent.
+
+**Well-covered indicators on all 3 panels:** TGFBR2, RNF43, MSH6, ARID1A, APC, PTEN, JAK1, AXIN2, MRE11A, B2M, KMT2C.
+
+**468/505 only:** MSH3, TCF7L2.
+
+### MAF-only MSI detection strategies (without BAM)
+
+**Strategy 1: Indel-based features (MSIpred-like)**
+- Count frameshift insertions and deletions per Mb
+- Compute I index = indel count / total mutation count
+- Threshold: I index >= 9% suggests MSI (Kim JE et al.)
+- Requires normalization by panel size
+- Limitation: 300-500 gene panel has fewer variants than WES; feature space is compressed
+
+**Strategy 2: Coding microsatellite frameshift counting**
+- Count frameshift indels specifically at known cMS loci on the panel
+- MSI indicator genes on IMPACT: TGFBR2, RNF43, MSH6, MSH3, ARID1A, PTEN, JAK1, MRE11A, B2M, AXIN2, KMT2C, APC, TCF7L2
+- Threshold: >= 3-5 cMS with frameshift mutations strongly suggests MSI-H
+- Precedent: Kim JE (mutated homopolymer >= 5 detects MSI), Idylla (2/7 positive = MSI-H)
+- Most robust for GENIE data since these specific genes are well-annotated in the MAF
+
+**Strategy 3: Combined TMB + indel fraction + cMS count**
+- High TMB (10-100 mut/Mb) + elevated indel fraction + multiple cMS frameshifts = MMRd
+- Distinguishes from POLEmut: POLE has very high TMB (>100) but LOW indel fraction (< 5%)
+- POLEmut: dominated by C>A substitutions, few frameshifts
+- MMRd: moderate-high TMB, HIGH indel fraction (>15-20%), many frameshifts at cMS
+
+**Strategy 4: MMR gene biallelic inactivation (already implemented)**
+- Biallelic hits in MLH1/MSH2/MSH6/PMS2 = strong MMRd evidence
+- Single heterozygous hit = possible Lynch, needs IHC confirmation
+- Combine with cMS counting for confidence scoring
+
+### Proposed implementation for ec-molsubtype
+
+A tiered approach combining all strategies:
+1. If `msi_pct` provided (from local panel MSI markers) -> use directly (primary)
+2. Count frameshift indels at cMS indicator loci on the panel -> cMS score
+3. Compute indel fraction (I index) from MAF
+4. Check for biallelic MMR gene inactivation
+5. Combine: cMS_score >= 3 AND I_index >= 9% -> MMRd (moderate-high confidence)
+6. Cross-validate against TMB range (10-100 for MMRd, exclude POLEmut if TMB > 100 + low indels)
+
+### Key caveats
+- ACVR2A absence from MSK-IMPACT is a significant gap — the single most informative MSI indicator gene
+- Panel-based cMS counting has lower sensitivity than BAM-based MSIsensor because fewer loci are interrogated
+- Indel fraction from small panels may be noisy; need to validate thresholds on GENIE data
+- Endometrial cancer shows different cMS target spectrum than CRC: TGFBR2 much less frequent (5% vs 80%), JAK1/TFAM more frequent
+- MSIpred was trained on WES data; direct application to panel data needs validation
+- The I index threshold of 9% was derived from a 382-gene CRC panel; may need recalibration for IMPACT panels
+
+### Next steps
+- Implement cMS counting in ec-molsubtype mmr.py module
+- Compute I index from GENIE EC MAF data and determine panel-specific thresholds
+- Validate: compare cMS-based MMRd calls against TMB distribution (MMRd should cluster in TMB 10-100)
+- Look for RPL22-like high-frequency cMS targets that are on IMPACT but not in our current list
