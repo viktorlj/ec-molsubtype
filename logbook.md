@@ -215,3 +215,74 @@ A tiered approach combining all strategies:
 - Compute I index from GENIE EC MAF data and determine panel-specific thresholds
 - Validate: compare cMS-based MMRd calls against TMB distribution (MMRd should cluster in TMB 10-100)
 - Look for RPL22-like high-frequency cMS targets that are on IMPACT but not in our current list
+
+## 2026-03-22: MSI proxy calibration and initial GENIE validation
+
+**Session context:** Claude Opus 4.6. Continues from literature review.
+
+### Goal
+Build an MSI proxy from coding microsatellite frameshift counting, calibrate specificity, and run the full classifier on 4,041 GENIE V18 MSK-IMPACT EC samples.
+
+### Method
+- Computed per-gene frameshift rates in MSI-H (current classifier MMRd) vs MSS (NSMP, TMB<10, I-index<0.3) control groups
+- Stratified 13 cMS genes into high-specificity (>99.5% spec) and low-specificity tiers
+- Built `msi.py` module: pseudo_msi_pct = (high_spec_genes_hit / total_high_spec_genes) * 100
+- Excluded ARID1A (11.4% background) and PTEN (8.0% background) from score
+- Set msi_threshold=9% (captures 1+ of 11 high-spec genes = 9.1%)
+
+### Results — MSI-specificity calibration
+
+| Gene | MSI-H % | MSS % | Enrichment | Specificity | Tier |
+|------|---------|-------|------------|-------------|------|
+| JAK1 | 59.6% | 0.1% | 449x | 99.9% | HIGH |
+| RNF43 | 44.7% | 0.3% | 135x | 99.7% | HIGH |
+| MSH3 | 25.7% | 0.0% | inf | 100.0% | HIGH |
+| MSH6 | 17.2% | 0.0% | inf | 100.0% | HIGH |
+| KMT2C | 13.1% | 0.3% | 49x | 99.7% | HIGH |
+| AXIN2 | 12.6% | 0.0% | inf | 100.0% | HIGH |
+| TCF7L2 | 10.1% | 0.1% | 152x | 99.9% | HIGH |
+| APC | 8.0% | 0.2% | 40x | 99.8% | HIGH |
+| MRE11A | 6.2% | 0.1% | 93x | 99.9% | HIGH |
+| B2M | 4.6% | 0.0% | inf | 100.0% | HIGH |
+| TGFBR2 | 2.3% | 0.1% | 17x | 99.9% | HIGH |
+| ARID1A | 91.5% | 11.4% | 8x | 88.6% | LOW |
+| PTEN | 62.8% | 8.0% | 8x | 92.0% | LOW |
+
+### Results — Validation (msi_threshold=9%, n=4,041)
+
+| Subtype | Observed | Expected (TCGA) | Notes |
+|---------|----------|-----------------|-------|
+| POLEmut | 4.6% | ~7% | POLE VUS not auto-classified |
+| MMRd | 17.8% | ~28% | No ACVR2A, no IHC, no direct MSI |
+| p53abn | 20.0% | ~26% | TP53 LOH/deletions missed |
+| NSMP | 57.6% | ~39% | Absorbs missed MMRd + p53abn |
+
+Secondary evidence validation (all concordant with expectations):
+- POLEmut: TMB median=121.3, FGA=0.000, I-index=0.006
+- MMRd: TMB median=30.9, FGA=0.032, I-index=0.381
+- p53abn: TMB median=4.1, FGA=0.238, I-index=0.111
+- NSMP: TMB median=4.8, FGA=0.035, I-index=0.167
+
+Histology-specific:
+- UEC (endometrioid): 25.2% MMRd (expected ~30%) — good
+- USC (serous): 46.7% p53abn, 53.2% NSMP — missing TP53 LOH cases
+- Multiple classifiers: 3.9% (expected 3-6%)
+
+### Interpretation
+- The classifier architecture works correctly. All secondary evidence metrics cleanly separate subtypes.
+- MMRd sensitivity is ~64% of expected (17.8/28). The ~10% gap is consistent with missing ACVR2A (the #1 MSI indicator, 50-91% in MSI-H) and no direct MSI markers or IHC.
+- p53abn sensitivity ~77% of expected (20/26). USC showing 53% NSMP suggests many cases with TP53 deletions/LOH not detectable by panel mutation calling — these would show p53-null by IHC but wild-type by sequencing.
+- POLEmut is ~66% of expected. Remaining gap likely from POLE VUS that need TMB >100 confirmation.
+- The specificity-tiered cMS approach is sound. JAK1 as the top MSI indicator (449x enrichment, 59.6% sensitivity) confirms EC-specific MSI biology.
+
+### Decisions & Next Steps
+- The validation demonstrates the classifier is working as designed with known limitations
+- For clinical use: msi_pct from local panel MSI markers (primary) bypasses all cMS proxy limitations
+- Consider adding logic for POLE VUS auto-promotion when TMB >100 + concordant spectrum
+- Explore TP53 detection gap: check if we can use CNA data to infer TP53 LOH
+- Write tests for msi.py module
+
+### Output files
+- `data/genie/ec_msk_classifications.tsv` — 4,041 rows, full classification results
+- `data/genie/validation_summary.txt` — summary statistics
+- `scripts/validate_genie_ec.py` — validation pipeline
