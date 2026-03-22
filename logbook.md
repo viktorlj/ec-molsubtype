@@ -45,3 +45,60 @@ Prepare the ec-molsubtype repository for GitHub (README, LICENSE, .gitignore) an
 - `data/genie/ec_msk_mutations.maf` — 97,474 rows, 31 MB
 - `data/genie/ec_msk_tmb.tsv` — 4,041 rows, computed TMB + GENIE TMB bins
 - `data/genie/extraction_summary.txt` — summary statistics
+
+## 2026-03-22: CNA extraction and TP53-CIN correlation analysis
+
+**Session context:** Claude Opus 4.6, ~5 min. Continues from 2026-03-22: GENIE V18 data extraction.
+
+### Goal
+Extract CNA segmentation data for EC MSK-IMPACT samples and quantify the relationship between TP53 mutation status and chromosomal instability (CIN).
+
+### Method
+- Filtered `data_cna_hg19.seg` (424 MB, 7.6M segments) for EC sample IDs
+- Computed per-sample CIN metrics: FGA (fraction genome altered, |log2R| > 0.2), wGII (weighted genome instability index), segment counts
+- Classified TP53 variants: hotspot (curated list) > truncating > missense > other
+- Merged with OncoTree codes and computed TMB for joint analysis
+- hg19 chromosome sizes used for genome fraction calculations
+
+### Results
+- **4,037 / 4,041 samples** have CNA data (197,258 segments)
+- **FGA overall:** median 0.044, mean 0.137, max 0.983
+- **Segments per sample:** median 35, mean 49, max 323
+- **1,709 samples (42%) have TP53 mutations:** 564 hotspot, 665 missense, 444 truncating, 36 other
+
+**TP53 mutant vs wild-type CIN (key finding):**
+
+| Status | n | FGA median | FGA mean | FGA IQR | wGII median |
+|--------|---|-----------|----------|---------|-------------|
+| TP53 mutated | 1,708 | 0.189 | 0.229 | 0.020-0.384 | 0.1221 |
+| TP53 wild-type | 2,329 | 0.009 | 0.069 | 0.000-0.070 | 0.0369 |
+
+**CIN by histological subtype:**
+- USC (serous): n=629, FGA median=0.185, TP53mut 90% — highest CIN + TP53 co-occurrence
+- UCS (carcinosarcoma): n=438, FGA median=0.328, TP53mut 84% — highest CIN overall
+- UEC (endometrioid): n=2,171, FGA median=0.008, TP53mut 16% — low CIN, low TP53
+- UCEC (NOS): n=417, FGA median=0.054, TP53mut 53% — intermediate
+
+**CIN by TP53 variant class (among TP53 mutants):**
+- Hotspot: n=563, FGA median=0.191
+- Missense (non-hotspot): n=665, FGA median=0.205
+- Truncating: n=444, FGA median=0.168
+- All classes show similar CIN levels; no major difference between hotspot and truncating
+
+### Interpretation
+- Strong TP53-CIN correlation confirmed: TP53-mutated samples have ~21x higher median FGA (0.189 vs 0.009). This supports using FGA as secondary evidence for the p53abn subtype.
+- The wide IQR for TP53 mutants (0.020-0.384) suggests heterogeneity — some TP53-mutated tumors have low CIN (possibly subclonal TP53 or early events before CIN accumulation).
+- USC/UCS showing >84% TP53 mutation rate and high CIN is consistent with the serous-like/p53abn biology.
+- UEC low TP53 rate (16%) aligns with endometrioid biology (expected enrichment in POLEmut, MMRd, NSMP subtypes).
+- Non-hotspot missense slightly higher FGA than hotspot — possibly because some of these are gain-of-function variants not yet in the hotspot list, or because the hotspot group includes some lower-penetrance variants.
+
+### Decisions & Next Steps
+- Use FGA threshold for secondary evidence: p53abn expects FGA >= 0.3, NSMP/POLEmut expect FGA <= 0.2
+- Consider the TP53 wild-type outliers with high FGA — could be p53-null by IHC (large deletions not detectable by panel sequencing)
+- Integrate CNA metrics into the ec-molsubtype evidence module
+- Next: run full classifier on GENIE data
+
+### Output files
+- `data/genie/ec_msk_cna_segments.tsv` — 197,258 rows, 11 MB
+- `data/genie/ec_msk_cin_metrics.tsv` — 4,037 rows
+- `data/genie/ec_msk_tp53_cin.tsv` — 4,037 rows (merged with TP53 status, OncoTree, TMB)

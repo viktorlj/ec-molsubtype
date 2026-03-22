@@ -19,6 +19,27 @@
 
 ---
 
+## 2026-03-22: TP53 mutations strongly predict chromosomal instability in EC
+
+**Evidence:** 4,037 EC samples with CNA segmentation data (GENIE V18 MSK-IMPACT).
+**Confidence:** High (large N, effect size is very large).
+
+- TP53-mutated EC has ~21x higher median FGA than wild-type (0.189 vs 0.009)
+- USC (serous): 90% TP53 mutated, FGA median 0.185 — most CIN-high subtype
+- UCS (carcinosarcoma): 84% TP53 mutated, FGA median 0.328 — highest absolute CIN
+- UEC (endometrioid): 16% TP53 mutated, FGA median 0.008 — CIN-low
+- All TP53 variant classes (hotspot, truncating, non-hotspot missense) show similar FGA levels (~0.17-0.21 median), suggesting functional equivalence for CIN association
+- Wide IQR in TP53 mutants (0.020-0.384) indicates heterogeneity — some TP53-mutated tumors are CIN-low (possibly subclonal or early events)
+
+**Implications for the classifier:**
+- FGA is a strong secondary evidence marker for p53abn subtype
+- Recommend FGA >= 0.3 threshold for "high CIN" concordant with p53abn, <= 0.2 for "low CIN" concordant with POLEmut/NSMP
+- TP53 wild-type samples with high FGA warrant investigation — possible large TP53 deletions not captured by panel sequencing, or CIN through non-TP53 mechanisms
+
+**Literature support:** Consistent with TCGA 2013 (Nature 497:67-73) showing serous-like/copy-number-high cluster enriched for TP53 mutations.
+
+---
+
 ## Emerging Hypotheses
 
 ### H1: Panel-based molecular subtyping can reproduce TCGA EC classifications with >85% concordance
@@ -28,3 +49,7 @@
 ### H2: MMRd detection from panel data without MSI markers will have lower sensitivity than MSI-based detection
 - **Falsifiable test:** Compare MMRd calls using only MMR gene mutations vs. GENIE TMB-high + MMR-mutated as a proxy. If available, compare against published IHC data for MSK EC cohorts
 - **Priority:** High — MMRd is the most clinically actionable subtype for immunotherapy
+
+### H3: TP53 wild-type tumors with high CIN represent undetected p53abn cases (large deletions/LOH)
+- **Falsifiable test:** Identify TP53-WT samples with FGA > 0.3; check if they cluster with serous histology (USC) and have low TMB. If so, these may be p53-null by IHC but undetectable by panel sequencing
+- **Priority:** Medium — affects classifier sensitivity for p53abn subtype
