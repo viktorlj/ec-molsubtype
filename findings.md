@@ -87,6 +87,53 @@ MMRd: moderate TMB (10-100), high indel fraction (>15-20%), many cMS frameshifts
 
 ---
 
+## 2026-03-23: cBioPortal EC dataset survey — three independent validation cohorts identified
+
+**Evidence:** Systematic cBioPortal API query of all 14 endometrial/uterine cancer studies, plus web searches for PORTEC, NRG/GOG, and other deposited datasets.
+**Confidence:** High for data availability; Medium for GENIE overlap assessment (no barcode-level deduplication performed yet).
+
+**Key finding 1: Three fully independent validation cohorts available on cBioPortal.**
+- TCGA PanCancer Atlas (529 samples, 507 with subtypes, MSI MANTIS+sensor scores)
+- TCGA Nature 2013 (373 samples, 232 with subtypes, 5/7-marker MSI calls, MLH1 silencing)
+- CPTAC (95 samples, 4 subtypes, MSI status, POLE status, mutation signature fractions, proteomics)
+All three use whole-exome or whole-genome sequencing — zero overlap with GENIE panel data.
+
+**Key finding 2: MSK cBioPortal datasets likely overlap heavily with GENIE V18.**
+The MSK CDS 2023 study (1,882 samples with molecular subtypes) uses IMPACT468/505/410/341 panels — identical to GENIE MSK contribution. MSK submits all prospectively sequenced samples to GENIE. Use only after barcode-level deduplication.
+
+**Key finding 3: TCGA subtype labels map cleanly to the ec-molsubtype categories.**
+- UCEC_POLE (49) -> POLEmut
+- UCEC_MSI (148) -> MMRd
+- UCEC_CN_HIGH (163) -> p53abn
+- UCEC_CN_LOW (147) -> NSMP
+The PanCancer Atlas provides continuous MSI scores (MANTIS + MSIsensor) enabling threshold calibration, not just categorical calls.
+
+**Key finding 4: PORTEC trial molecular data is not publicly deposited.**
+PORTEC-1/2/3 molecular classification (Leon-Castillo et al. JCO 2020) covers ~423 samples with WHO 2020 subtypes, but data is held by LUMC Leiden. Available only through collaboration.
+
+**Key finding 5: CPTAC has per-sample mutation signature fractions (C>A, C>G, C>T, T>A, T>C, T>G).**
+This enables direct validation of the secondary evidence module's substitution profile checks (e.g., C>A >20% for POLEmut).
+
+**Implications for validation:**
+- Use TCGA PanCancer Atlas as the primary validation cohort (largest, best annotated)
+- Use TCGA Nature 2013 for MSI marker ground truth comparison
+- Use CPTAC for secondary evidence validation (signatures, proteomics)
+- The combined TCGA+CPTAC independent validation covers 624 unique samples with molecular subtypes
+
+**Literature:**
+- TCGA 2013: PMID 23636398 (Nature 497:67-73)
+- TCGA PanCancer Atlas: PMID 29625048
+- CPTAC: PMID 32059776 (Cell 2020)
+- MSK CDS 2023: PMID 37651310 (Weigelt et al. Cancer Discovery)
+- PORTEC-3 molecular: PMID 32749941 (Leon-Castillo et al. JCO 2020)
+
+**Open questions:**
+- What is the actual barcode-level overlap between MSK CDS 2023 (1,882 samples) and GENIE V18?
+- Can we use the TCGA GDC 2025 re-processed calls (547 samples) to improve on the original Nature 2013 mutation calls?
+- How well do continuous MSI scores (MANTIS, MSIsensor) correlate with our cMS-based pseudo_msi_pct?
+
+---
+
 ## Emerging Hypotheses
 
 ### H1: Panel-based molecular subtyping can reproduce TCGA EC classifications with >85% concordance

@@ -352,3 +352,144 @@ Improve MMRd detection by incorporating the indel fraction (I-index) into the MS
 - `data/genie/ec_multi_panel_classifications.tsv` — 5,141 rows, all panels
 - `data/genie/multi_panel_validation_summary.txt` — cross-panel comparison
 - `scripts/validate_multi_panel.py` — multi-panel validation pipeline
+
+## 2026-03-23: cBioPortal EC dataset survey for independent validation
+
+**Session context:** Claude Opus 4.6, ~30 min. Systematic search for validation datasets independent of GENIE V18.
+
+### Objective
+Identify endometrial cancer datasets on cBioPortal (and elsewhere) that can serve as independent validation cohorts for the molecular subtyping classifier. Requirements: NOT from AACR GENIE, has mutation data, ideally has MSI/MMR status and molecular subtype annotations.
+
+### Approach
+- Queried cBioPortal REST API for all endometrial/uterine studies (keyword search + oncotree filtering)
+- Retrieved clinical attributes, sample counts, and molecular profiles for each study
+- Extracted actual clinical data values (SUBTYPE, MSI_STATUS, POLE, etc.) to assess annotation quality
+- Web searches for PORTEC, NRG/GOG, and other deposited datasets
+- Assessed MSK-IMPACT studies for GENIE overlap risk
+
+### Results — All cBioPortal EC datasets identified
+
+| Study ID | Name | Samples | Mutations | CNA | MSI Data | Subtype | GENIE Overlap Risk |
+|----------|------|---------|-----------|-----|----------|---------|-------------------|
+| ucec_tcga_pub | TCGA Nature 2013 | 373 (248 sequenced) | YES (WES MAF) | YES (GISTIC) | YES (5/7 marker) | YES (n=232) | NONE |
+| ucec_tcga_pan_can_atlas_2018 | TCGA PanCancer Atlas | 529 | YES (WES MAF) | YES (GISTIC+arm) | YES (MANTIS+sensor) | YES (n=507) | NONE |
+| ucec_tcga | TCGA Firehose Legacy | 549 | YES | YES | NO direct | NO | NONE |
+| ucec_tcga_gdc | TCGA GDC 2025 | 547 | YES | YES | NO | NO | NONE |
+| ucec_cptac_2020 | CPTAC Cell 2020 | 95 | YES (WES+WGS) | YES | YES | YES (4 subtypes) | NONE |
+| ucec_msk_2018 | MSK 2018 | 197 | YES (IMPACT) | YES | YES (IHC+MSI) | partial (POLE, IHC) | HIGH |
+| ucec_ancestry_cds_msk_2023 | MSK Cancer Discovery 2023 | 1,882 | YES (IMPACT) | YES | NO direct | YES (4 subtypes) | HIGH |
+| ucec_ccr_msk_2022 | MSK CCR MSI 2022 | 181 | YES (IMPACT) | NO | YES (MSI+mechanism) | MMRd only | HIGH |
+| ucec_ccr_cfdna_msk_2022 | MSK cfDNA 2022 | 44 | YES | NO | NO | NO | HIGH |
+| ucec_msk_2024 | MSK NatMed 2024 | 33 | YES (IMPACT) | NO | YES (MSI score) | NO | HIGH |
+| ucs_msk_2024 | MSK MolOnc ERBB2 2024 | 69 | YES (IMPACT) | NO | NO | NO | HIGH |
+| uec_msk_2024 | MSK HR+ 2024 | 24 | YES (IMPACT) | NO | NO | NO | HIGH |
+| ucec_msk_dacruzpaula_2025 | MSK scDNA 2025 | 11 | YES | NO | NO | NO | HIGH |
+| uec_cptac_gdc | CPTAC GDC 2025 | 442 | YES | YES | NO | NO | NONE |
+
+### Results — Detailed annotation assessment
+
+**1. TCGA PanCancer Atlas (ucec_tcga_pan_can_atlas_2018) — TOP PICK**
+- 529 samples, 507 with molecular subtype annotations
+- Subtypes: UCEC_CN_HIGH (163), UCEC_MSI (148), UCEC_CN_LOW (147), UCEC_POLE (49)
+- MSI: MANTIS scores (n=526) + MSIsensor scores (n=528) — continuous values
+- CNA: GISTIC + arm-level CNA + aneuploidy scores
+- TMB: nonsynonymous TMB available (n=517)
+- Also has: FGA, methylation, RNA-seq, RPPA
+- WES data — fully independent from GENIE (no panel overlap)
+
+**2. TCGA Nature 2013 (ucec_tcga_pub) — GOLD STANDARD**
+- 373 samples, 248 with mutation data, 232 with all 4 molecular subtypes
+- Subtypes: Copy-number low/Endometrioid (90), MSI/Hypermutated (65), Copy-number high/Serous-like (60), POLE/Ultra-mutated (17)
+- MSI: 5-marker call (MSS 213, MSI-H 125, MSI-L 32) + 7-marker call (MSS 223, MSI-H 127, MSI-L 20)
+- MLH1 silencing annotated (114/370 positive)
+- Mutation rate cluster: LOW (152), HIGH (67), HIGHEST (26)
+- CNA cluster K4 annotated
+- WES data — fully independent from GENIE
+
+**3. CPTAC (ucec_cptac_2020) — EXCELLENT but small**
+- 95 samples with rich multi-omic data
+- Subtypes: CNV_low (43), MSI-H (25), CNV_high (20), POLE (7)
+- MSI status: MSS (70), MSI-H (25)
+- POLE subtype: Yes (7), No (88)
+- p53 IHC: mostly "Cannot be determined" (81), some overexpression (4) and loss (2)
+- TP53 pathway status annotated
+- Mutation signatures (C>A, C>G, C>T, T>A, T>C, T>G fractions) available per sample
+- Also: proteomics, acetylproteomics, phosphoproteomics, methylation, circular RNA
+- WES+WGS data — fully independent from GENIE
+
+**4. MSK Cancer Discovery 2023 (ucec_ancestry_cds_msk_2023) — LARGE but GENIE overlap**
+- 1,882 samples — the LARGEST EC cohort with molecular subtypes
+- Subtypes: CN-H/TP53abn (746), CN-L/NSMP (599), MSI-H (440), POLE (97)
+- Gene panels: IMPACT468 (1,185), IMPACT505 (476), IMPACT410 (163), IMPACT341 (58)
+- **WARNING: HIGH GENIE overlap risk.** All use MSK-IMPACT panels, same as GENIE MSK contribution. Many/most of these patients are likely in GENIE V18.
+- PMID: 37651310 (Weigelt et al., Cancer Discovery 2023)
+
+**5. MSK 2018 (ucec_msk_2018) — SMALL but has IHC**
+- 197 samples of advanced-stage EC
+- MMR-D by IHC: Y (24), N (75), not done (89), inconclusive (1)
+- MSI status: MSS (154), MSI-H (28), MSI-indeterminate (14)
+- IHC detail: protein-level MMR loss patterns (MLH1/PMS2, MSH6, MSH2/MSH6)
+- POLE ultra-mutated: Y (2), N (187)
+- SCNA cluster: A (60), B (71), C (31)
+- **WARNING: HIGH GENIE overlap risk.** MSK-IMPACT data.
+- PMID: 30068706
+
+**6. MSK CCR MSI 2022 (ucec_ccr_msk_2022) — MSI-ENRICHED**
+- 181 samples — all MSI-H/MSI-focused
+- MSI status: high (168), low (8), indeterminant (5)
+- MMR-D mechanism: MLH1 methylation (117), Somatic (40), Germline (24)
+- Useful for testing MMRd detection sensitivity, but ascertainment-biased (MSI-enriched)
+- **WARNING: HIGH GENIE overlap risk.**
+- PMID: 35849120
+
+### Results — Non-cBioPortal datasets
+
+**PORTEC trials (PORTEC-1, -2, -3)**
+- PORTEC-3 molecular classification published (Leon-Castillo et al. JCO 2020, PMID: 32749941)
+- ~423 samples with molecular subtypes (POLEmut, MMRd, p53abn, NSMP)
+- **Data NOT publicly deposited.** Held by LUMC, Leiden. Available only through collaboration.
+
+**NRG/GOG studies**
+- Not found on cBioPortal. No publicly deposited datasets with molecular subtypes identified.
+
+**MSK-CHORD (msk_chord_2024)**
+- 25,040 samples but focused on NSCLC, breast, CRC, prostate, pancreatic
+- No endometrial cancer samples included
+
+### Interpretation
+
+**Best candidates for independent validation (no GENIE overlap):**
+
+1. **TCGA PanCancer Atlas** — The strongest option. 529 samples, 507 with subtypes, continuous MSI scores, comprehensive annotations. The TCGA original subtypes (CN_HIGH, MSI, CN_LOW, POLE) map directly to p53abn, MMRd, NSMP, POLEmut. WES-based — fully independent.
+
+2. **TCGA Nature 2013** — The original 373-sample publication cohort. Subset of PanCancer Atlas but has the classic 5/7-marker MSI calls and MLH1 silencing annotations that PanCancer Atlas lacks. Most rigorous ground truth.
+
+3. **CPTAC** — Small (n=95) but the richest annotation set: proteomics, mutation signatures per sample, MSI status, POLE status. Ideal for testing secondary evidence concordance. Fully independent.
+
+4. **TCGA GDC 2025** — 547 samples, updated mutation calls through GDC pipeline. No subtype annotations, but we can derive them from mutations (POLE, TP53) and compare against PanCancer Atlas annotations for the same patients.
+
+**Datasets with GENIE overlap risk (use with caution):**
+
+5. **MSK Cancer Discovery 2023** — 1,882 samples with molecular subtypes. The MOST useful dataset if we can identify and remove GENIE-overlapping patients. All use IMPACT panels (identical to GENIE). Sample deduplication by barcode comparison would be needed.
+
+6. **MSK 2018** — 197 samples with IHC-validated MMR status. Valuable ground truth for MMRd detection, but most patients are likely in GENIE V18.
+
+**GENIE overlap assessment:**
+All MSK cBioPortal studies use MSK-IMPACT panels. MSK contributes all its IMPACT data to GENIE. Therefore, any MSK cBioPortal study should be assumed to have near-complete overlap with GENIE unless proven otherwise by barcode comparison. The GENIE data guide confirms that MSK submits prospectively sequenced clinical samples, which is the same source as these publications.
+
+### Decisions & Next Steps
+1. Download TCGA PanCancer Atlas data (ucec_tcga_pan_can_atlas_2018) as primary validation — mutations, CNA, clinical data with subtypes + MSI scores
+2. Download TCGA Nature 2013 data (ucec_tcga_pub) for MSI marker ground truth
+3. Download CPTAC data (ucec_cptac_2020) for secondary evidence validation
+4. Map TCGA subtype labels to our classifier categories: UCEC_POLE -> POLEmut, UCEC_MSI -> MMRd, UCEC_CN_HIGH -> p53abn, UCEC_CN_LOW -> NSMP
+5. Run classifier on TCGA mutation data and compute concordance
+6. For MSK CDS 2023: attempt barcode-level deduplication against GENIE V18 sample list
+7. Consider requesting PORTEC data through LUMC collaboration
+
+### Data access
+- cBioPortal API: `https://www.cbioportal.org/api/`
+- Study-specific mutations: `GET /molecular-profiles/{studyId}_mutations/mutations`
+- Clinical data: `GET /studies/{studyId}/clinical-data`
+- Bulk download: `https://www.cbioportal.org/datasets` (zip per study)
+- GitHub datahub: `https://github.com/cBioPortal/datahub` (via git-lfs)
+- Raw files: `https://media.githubusercontent.com/media/cBioPortal/datahub/master/public/{studyId}/data_mutations.txt`
