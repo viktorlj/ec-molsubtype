@@ -48,15 +48,26 @@ def classify_sample(
     pole_results = assess_pole(variants)
     best_pole = get_best_pole_result(pole_results)
 
+    # Build MMR IHC dict from metadata if any IHC fields are set
+    mmr_ihc = None
+    if any([meta.mmr_ihc_mlh1, meta.mmr_ihc_msh2, meta.mmr_ihc_msh6, meta.mmr_ihc_pms2]):
+        mmr_ihc = {
+            "MLH1": meta.mmr_ihc_mlh1,
+            "MSH2": meta.mmr_ihc_msh2,
+            "MSH6": meta.mmr_ihc_msh6,
+            "PMS2": meta.mmr_ihc_pms2,
+        }
+
     mmr_result = assess_mmr(
         variants,
         msi_pct=meta.msi_pct,
         msi_status_override=meta.msi_status,
         msi_threshold=msi_threshold,
+        mmr_ihc=mmr_ihc,
     )
 
     tp53_results = assess_tp53(variants, min_vaf=min_tp53_vaf)
-    best_tp53 = get_pathogenic_tp53(tp53_results)
+    best_tp53 = get_pathogenic_tp53(tp53_results, p53_ihc=meta.p53_ihc)
 
     # --- Step 1: POLE EDM ---
     if best_pole and best_pole.tier in (PoleTier.TIER1, PoleTier.TIER2):

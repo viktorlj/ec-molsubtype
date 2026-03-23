@@ -79,20 +79,84 @@ def assess_mmr(
     msi_pct: float | None = None,
     msi_status_override: str | None = None,
     msi_threshold: float = DEFAULT_MSI_THRESHOLD,
+    mmr_ihc: dict[str, str | None] | None = None,
 ) -> MmrResult:
-    """Assess MMR deficiency from MSI data and/or MMR gene mutations.
+    """Assess MMR deficiency from IHC, MSI data, and/or MMR gene mutations.
 
-    Combined logic:
-    - msi_pct >= threshold → MMRd (high confidence)
-    - msi_pct < threshold BUT biallelic MMR → MMRd (moderate, flag discordance)
-    - msi_pct not provided AND biallelic MMR → MMRd (moderate)
-    - msi_pct not provided AND single het MMR → NOT MMRd, flag
-    - No MSI data and no MMR mutations → MMR proficient
+    Priority order:
+    0. MMR IHC protein loss → MMRd (high confidence, clinical gold standard)
+    1. msi_pct >= threshold → MMRd (high confidence)
+    2. msi_pct < threshold BUT biallelic MMR → MMRd (moderate, flag discordance)
+    3. msi_pct not provided AND biallelic MMR → MMRd (moderate)
+    4. msi_pct not provided AND single het MMR → NOT MMRd, flag
+    5. No MSI data and no MMR mutations → MMR proficient
     """
     flags: list[str] = []
     clinical_notes: list[str] = []
 
-    # MSI assessment
+    # --- Step 0: MMR IHC (highest priority when available) ---
+    if mmr_ihc:
+        lost_proteins = [
+            gene.upper() for gene, status in mmr_ihc.items()
+            if status and status.lower() == "lost"
+        ]
+        if lost_proteins:
+            lost_str = ", ".join(sorted(lost_proteins))
+            clinical_notes.append(
+                f"MMR IHC: loss of {lost_str} protein expression. "
+                "Direct evidence of MMR deficiency."
+            )
+            # Determine Lynch screening guidance based on which protein is lost
+            if "MLH1" in lost_proteins:
+                clinical_notes.append(
+                    "MLH1 loss detected — check MLH1 promoter hypermethylation. "
+                    "If negative, germline MLH1 testing recommended (Lynch syndrome)."
+                )
+            if "MSH2" in lost_proteins:
+                clinical_notes.append(
+                    "MSH2 loss detected — germline MSH2/EPCAM testing recommended (Lynch syndrome)."
+                )
+            if "MSH6" in lost_proteins and "MSH2" not in lost_proteins:
+                clinical_notes.append(
+                    "Isolated MSH6 loss — germline MSH6 testing recommended."
+                )
+            if "PMS2" in lost_proteins and "MLH1" not in lost_proteins:
+                clinical_notes.append(
+                    "Isolated PMS2 loss — germline PMS2 testing recommended."
+                )
+
+            # Check for supporting sequencing evidence
+            mmr_variants = find_mmr_variants(variants)
+            pathogenic_by_gene = assess_biallelic(mmr_variants)
+            all_pathogenic = [v for vs in pathogenic_by_gene.values() for v in vs]
+            mmr_mutation_strs = [f"{v.hugo_symbol} {v.hgvsp_short}" for v in all_pathogenic]
+            if mmr_mutation_strs:
+                clinical_notes.append(
+                    f"Supporting MMR gene mutations: {', '.join(mmr_mutation_strs)}."
+                )
+
+            return MmrResult(
+                is_mmrd=True,
+                confidence=ConfidenceLevel.HIGH,
+                msi_pct=msi_pct,
+                msi_status=msi_status_override or (classify_msi_status(msi_pct, msi_threshold) if msi_pct is not None else None),
+                mmr_mutations=mmr_mutation_strs,
+                is_biallelic=any(len(vs) >= 2 for vs in pathogenic_by_gene.values()),
+                flags=flags,
+                clinical_notes=clinical_notes,
+            )
+
+        # All tested proteins intact
+        intact_proteins = [
+            gene.upper() for gene, status in mmr_ihc.items()
+            if status and status.lower() == "intact"
+        ]
+        if intact_proteins:
+            clinical_notes.append(
+                f"MMR IHC: {', '.join(sorted(intact_proteins))} intact."
+            )
+
+    # --- MSI / mutation-based assessment (original logic) ---
     computed_msi_status: str | None = None
     if msi_pct is not None:
         computed_msi_status = classify_msi_status(msi_pct, msi_threshold)

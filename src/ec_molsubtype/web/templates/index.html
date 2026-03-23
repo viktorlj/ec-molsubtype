@@ -46,6 +46,31 @@
         MSI threshold % <small>(default 20)</small>
         <input type="number" name="msi_threshold" step="0.1" value="20.0" min="0" max="100">
       </label>
+
+      <h4>Immunohistochemistry <small>(if available)</small></h4>
+      <p><small>IHC results take precedence over sequencing for MMR and p53 classification.</small></p>
+      <div class="grid">
+        <label>
+          MLH1 IHC
+          <select name="mmr_ihc_mlh1"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+        </label>
+        <label>
+          MSH2 IHC
+          <select name="mmr_ihc_msh2"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+        </label>
+        <label>
+          MSH6 IHC
+          <select name="mmr_ihc_msh6"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+        </label>
+        <label>
+          PMS2 IHC
+          <select name="mmr_ihc_pms2"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+        </label>
+      </div>
+      <label>
+        p53 IHC
+        <select name="p53_ihc"><option value="">Not tested</option><option value="wild_type">Wild-type</option><option value="aberrant">Aberrant (overexpression or null)</option></select>
+      </label>
     </details>
 
     <button type="submit">Classify</button>

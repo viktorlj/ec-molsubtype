@@ -35,6 +35,11 @@ async def classify(
     msi_pct: str = Form(""),
     fraction_genome_altered: str = Form(""),
     msi_threshold: str = Form("20.0"),
+    mmr_ihc_mlh1: str = Form(""),
+    mmr_ihc_msh2: str = Form(""),
+    mmr_ihc_msh6: str = Form(""),
+    mmr_ihc_pms2: str = Form(""),
+    p53_ihc: str = Form(""),
 ):
     templates = request.app.state.templates
     results_store = request.app.state.results
@@ -47,6 +52,12 @@ async def classify(
         if metadata_file and metadata_file.filename:
             meta_content = (await metadata_file.read()).decode("utf-8")
             meta_data = json.loads(meta_content)
+            # Form IHC fields override JSON if set (form is more recent)
+            for field, val in [("mmr_ihc_mlh1", mmr_ihc_mlh1), ("mmr_ihc_msh2", mmr_ihc_msh2),
+                               ("mmr_ihc_msh6", mmr_ihc_msh6), ("mmr_ihc_pms2", mmr_ihc_pms2),
+                               ("p53_ihc", p53_ihc)]:
+                if val.strip():
+                    meta_data[field] = val.strip()
             metadata = SampleMetadata(**meta_data)
         else:
             sid = sample_id.strip() or _infer_sample_id(maf_content, maf_file.filename)
@@ -55,6 +66,11 @@ async def classify(
                 tmb=_parse_float(tmb),
                 msi_pct=_parse_float(msi_pct),
                 fraction_genome_altered=_parse_float(fraction_genome_altered),
+                mmr_ihc_mlh1=mmr_ihc_mlh1.strip() or None,
+                mmr_ihc_msh2=mmr_ihc_msh2.strip() or None,
+                mmr_ihc_msh6=mmr_ihc_msh6.strip() or None,
+                mmr_ihc_pms2=mmr_ihc_pms2.strip() or None,
+                p53_ihc=p53_ihc.strip() or None,
             )
 
         sample = SampleInput(metadata=metadata, variants=variants)

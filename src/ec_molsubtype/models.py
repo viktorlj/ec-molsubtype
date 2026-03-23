@@ -120,6 +120,17 @@ class SampleMetadata(BaseModel):
     fraction_genome_altered: float | None = Field(None, ge=0.0, le=1.0)
     signature_weights: dict[str, float] | None = None
 
+    # IHC results (clinical gold standard when available)
+    # MMR IHC: protein expression status per gene
+    #   "lost" / "intact" / None (not tested)
+    mmr_ihc_mlh1: str | None = None
+    mmr_ihc_msh2: str | None = None
+    mmr_ihc_msh6: str | None = None
+    mmr_ihc_pms2: str | None = None
+    # p53 IHC: expression pattern
+    #   "aberrant" (overexpression or null) / "wild_type" / None (not tested)
+    p53_ihc: str | None = None
+
 
 class SampleInput(BaseModel):
     """Complete input for a single sample: variants + metadata."""

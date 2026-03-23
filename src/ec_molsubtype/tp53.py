@@ -235,18 +235,58 @@ def assess_tp53(variants: list[Variant], min_vaf: float = 0.05) -> list[Tp53Resu
     return results
 
 
-def get_pathogenic_tp53(results: list[Tp53Result]) -> Tp53Result | None:
+def get_pathogenic_tp53(
+    results: list[Tp53Result],
+    p53_ihc: str | None = None,
+) -> Tp53Result | None:
     """Get the most significant pathogenic TP53 result.
 
-    Priority: hotspot > truncating > other pathogenic.
+    Priority: hotspot > truncating > other pathogenic > IHC aberrant.
+
+    If p53_ihc is "aberrant" and no pathogenic sequencing variant is found,
+    the IHC result alone is sufficient to classify as p53abn. This catches
+    TP53 LOH/deletion cases undetectable by sequencing (~6% of p53abn).
     """
     pathogenic = [r for r in results if r.is_pathogenic]
-    if not pathogenic:
-        return None
 
-    # Prefer hotspots
-    hotspots = [r for r in pathogenic if r.is_hotspot]
-    if hotspots:
-        return hotspots[0]
+    if pathogenic:
+        # Prefer hotspots
+        hotspots = [r for r in pathogenic if r.is_hotspot]
+        if hotspots:
+            result = hotspots[0]
+        else:
+            result = pathogenic[0]
 
-    return pathogenic[0]
+        # Annotate IHC concordance if available
+        if p53_ihc and p53_ihc.lower() == "aberrant":
+            notes = list(result.clinical_notes)
+            notes.append("p53 IHC aberrant — concordant with pathogenic TP53 variant.")
+            return result._replace(clinical_notes=notes)
+        elif p53_ihc and p53_ihc.lower() == "wild_type":
+            notes = list(result.clinical_notes)
+            notes.append(
+                "DISCORDANCE: pathogenic TP53 variant detected but p53 IHC wild-type. "
+                "Consider subclonal variant or IHC interpretation review."
+            )
+            return result._replace(clinical_notes=notes)
+        return result
+
+    # No pathogenic variant found — check IHC
+    if p53_ihc and p53_ihc.lower() == "aberrant":
+        return Tp53Result(
+            is_pathogenic=True,
+            is_hotspot=False,
+            is_truncating=False,
+            is_benign_polymorphism=False,
+            variant_str="p53 IHC aberrant (no TP53 point mutation detected)",
+            codon=None,
+            in_dna_binding_domain=False,
+            clinical_notes=[
+                "p53 IHC aberrant pattern (overexpression or null). "
+                "No pathogenic TP53 point mutation detected by sequencing — "
+                "likely TP53 deletion/LOH or structural rearrangement.",
+                "IHC-based p53abn classification.",
+            ],
+        )
+
+    return None
