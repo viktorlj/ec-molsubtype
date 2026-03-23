@@ -104,5 +104,21 @@ def check_pole(
                 typer.echo(f"\n  ✗ TMB {tmb:.1f} mut/Mb does NOT support POLEmut")
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),
+    port: int = typer.Option(8000, "--port", help="Bind port"),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on changes"),
+) -> None:
+    """Start the web interface."""
+    import uvicorn
+
+    from .web.app import create_app
+
+    web_app = create_app()
+    typer.echo(f"Starting ec-molsubtype web interface at http://{host}:{port}")
+    uvicorn.run(web_app, host=host, port=port)
+
+
 if __name__ == "__main__":
     app()

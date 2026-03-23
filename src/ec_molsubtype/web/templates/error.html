@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Error — ec-molsubtype{% endblock %}
+{% block content %}
+<article>
+  <header><h2>Classification Error</h2></header>
+  <div class="notice warning">
+    <p>{{ error }}</p>
+  </div>
+  <p>Please check that your file is a valid tab-separated MAF with at least these columns:
+    <code>Hugo_Symbol</code>, <code>Variant_Classification</code>, <code>HGVSp_Short</code>.</p>
+  <a href="/" role="button" class="outline">Try again</a>
+</article>
+{% endblock %}

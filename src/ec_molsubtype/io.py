@@ -31,33 +31,34 @@ OPTIONAL_MAF_COLUMNS = {
 }
 
 
+def parse_maf_content(content: str) -> pl.DataFrame:
+    """Parse MAF content from a string into a polars DataFrame.
+
+    Strips comment lines starting with '#' and validates required columns.
+    Usable for both file-based and in-memory (web upload) MAF parsing.
+    """
+    lines = [line for line in content.splitlines(keepends=True) if not line.startswith("#")]
+    if not lines:
+        raise ValueError("Empty MAF content (no non-comment lines)")
+
+    cleaned = "".join(lines)
+    df = pl.read_csv(cleaned.encode(), separator="\t", infer_schema_length=0)
+
+    missing = REQUIRED_MAF_COLUMNS - set(df.columns)
+    if missing:
+        raise ValueError(f"MAF content missing required columns: {missing}")
+
+    return df
+
+
 def parse_maf(path: str | Path) -> pl.DataFrame:
     """Parse a MAF file into a polars DataFrame.
 
     Handles comment lines starting with '#'.
     """
     path = Path(path)
-
-    # Read skipping comment lines
-    lines = []
-    with open(path) as f:
-        for line in f:
-            if not line.startswith("#"):
-                lines.append(line)
-
-    if not lines:
-        raise ValueError(f"Empty MAF file: {path}")
-
-    # Write to temp string and read with polars
-    content = "".join(lines)
-    df = pl.read_csv(content.encode(), separator="\t", infer_schema_length=0)
-
-    # Validate required columns
-    missing = REQUIRED_MAF_COLUMNS - set(df.columns)
-    if missing:
-        raise ValueError(f"MAF file missing required columns: {missing}")
-
-    return df
+    content = path.read_text()
+    return parse_maf_content(content)
 
 
 def maf_row_to_variant(row: dict) -> Variant:
@@ -82,10 +83,13 @@ def maf_row_to_variant(row: dict) -> Variant:
 def load_maf_variants(path: str | Path) -> list[Variant]:
     """Load all variants from a MAF file."""
     df = parse_maf(path)
-    variants = []
-    for row in df.iter_rows(named=True):
-        variants.append(maf_row_to_variant(row))
-    return variants
+    return [maf_row_to_variant(row) for row in df.iter_rows(named=True)]
+
+
+def load_maf_variants_from_content(content: str) -> list[Variant]:
+    """Load variants from MAF content string (for web upload)."""
+    df = parse_maf_content(content)
+    return [maf_row_to_variant(row) for row in df.iter_rows(named=True)]
 
 
 def load_sample_metadata(path: str | Path) -> SampleMetadata:

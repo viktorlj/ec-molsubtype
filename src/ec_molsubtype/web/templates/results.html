@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ r.sample_id }} — ec-molsubtype{% endblock %}
+{% block content %}
+
+{% set subtype = r.primary_subtype %}
+{% set confidence = r.confidence %}
+
+{# --- Primary Result --- #}
+<article class="result-card">
+  <header>
+    <div class="result-header">
+      <div>
+        <small>Sample</small>
+        <h2>{{ r.sample_id }}</h2>
+      </div>
+      <div class="result-badges">
+        <span class="badge subtype-{{ subtype }}">{{ subtype }}</span>
+        <span class="badge confidence-{{ confidence }}">{{ confidence }}</span>
+      </div>
+    </div>
+  </header>
+
+  {% if r.figo_molecular_annotation %}
+  <p><strong>FIGO 2023 annotation:</strong> {{ r.figo_molecular_annotation }}</p>
+  {% endif %}
+
+  {# --- Classification Path --- #}
+  <h3>Classification Path</h3>
+  <div class="classification-path">
+    {% for step in r.classification_path %}
+    <div class="step step-{{ step.result }}">
+      <span class="step-number">{{ step.step }}</span>
+      <span class="step-test">{{ step.test }}</span>
+      {% if step.result == "positive" %}
+        <span class="step-result positive">Positive</span>
+      {% else %}
+        <span class="step-result negative">Negative</span>
+      {% endif %}
+      {% if step.variant %}
+        <span class="step-variant">{{ step.variant }}</span>
+      {% endif %}
+      {% if step.details %}
+        <small class="step-details">{{ step.details }}</small>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {# --- Multiple Classifier --- #}
+  {% set mc = r.multiple_classifier %}
+  {% if mc.is_multiple %}
+  <h3>Multiple Classifier</h3>
+  <div class="notice info">
+    <p><strong>Additional subtype features detected</strong> alongside the primary {{ subtype }} classification:</p>
+    <ul>
+      {% for feat in mc.secondary_features %}
+      <li>
+        <strong>{{ feat }}</strong>
+        {% if feat == "p53abn" and mc.tp53_variant %} &mdash; {{ mc.tp53_variant }}{% endif %}
+        {% if feat == "MMRd" and mc.mmr_evidence %} &mdash; {{ mc.mmr_evidence }}{% endif %}
+        {% if feat == "POLEmut" and mc.pole_variant %} &mdash; {{ mc.pole_variant }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <p><small>Per the WHO 2020 hierarchical algorithm, the primary classification is <strong>{{ subtype }}</strong>. Secondary features are reported for clinical awareness.</small></p>
+  </div>
+  {% endif %}
+
+  {# --- Secondary Evidence --- #}
+  {% set sec = r.secondary_evidence %}
+  {% if sec %}
+  <h3>Secondary Evidence</h3>
+  <div class="evidence-grid">
+    {% set items = [("TMB", sec.tmb), ("CNA burden", sec.cna_burden), ("Signatures", sec.signatures), ("Substitution spectrum", sec.substitution_profile)] %}
+    {% for label, item in items %}
+      {% if item %}
+      <div class="evidence-card {% if item.concordant == true %}concordant{% elif item.concordant == false %}discordant{% else %}na{% endif %}">
+        <h4>{{ label }}</h4>
+        {% if item.value is not none %}
+        <div class="evidence-value">{{ "%.1f"|format(item.value) }}</div>
+        {% endif %}
+        {% if item.concordant == true %}
+          <span class="concordance-badge concordant">Concordant</span>
+        {% elif item.concordant == false %}
+          <span class="concordance-badge discordant">Discordant</span>
+        {% else %}
+          <span class="concordance-badge na">N/A</span>
+        {% endif %}
+        {% if item.details %}
+          {% set desc = item.details.description if item.details is mapping else item.details %}
+          {% if desc %}<small>{{ desc }}</small>{% endif %}
+        {% endif %}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# --- Clinical Notes --- #}
+  {% if r.clinical_notes %}
+  <h3>Clinical Notes</h3>
+  <ul class="clinical-notes">
+    {% for note in r.clinical_notes %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {# --- Flags --- #}
+  {% if r.flags %}
+  <h3>Flags</h3>
+  {% for flag in r.flags %}
+  <div class="notice warning">{{ flag }}</div>
+  {% endfor %}
+  {% endif %}
+
+  {# --- Actions --- #}
+  <footer>
+    <div class="grid">
+      <a href="/results/{{ result_id }}/pdf" role="button">Download PDF</a>
+      <a href="/" role="button" class="outline">Classify another sample</a>
+      <a href="/results/{{ result_id }}/json" role="button" class="outline secondary" target="_blank">View JSON</a>
+    </div>
+  </footer>
+</article>
+
+{% endblock %}

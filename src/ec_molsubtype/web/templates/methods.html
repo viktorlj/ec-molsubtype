@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Methods — ec-molsubtype{% endblock %}
+{% block content %}
+
+<h1>Methods and Interpretation</h1>
+<p>This tool classifies endometrial carcinomas into four prognostic molecular subtypes following the WHO 2020 framework, FIGO 2023 molecular staging, and Swedish national guidelines (v3.2, 2026).</p>
+
+<nav>
+  <ul>
+    <li><a href="#algorithm">Algorithm</a></li>
+    <li><a href="#pole">POLE</a></li>
+    <li><a href="#mmr">MMR/MSI</a></li>
+    <li><a href="#tp53">TP53</a></li>
+    <li><a href="#evidence">Evidence</a></li>
+    <li><a href="#confidence">Confidence</a></li>
+    <li><a href="#limitations">Limitations</a></li>
+    <li><a href="#references">References</a></li>
+  </ul>
+</nav>
+
+{# ================================================ #}
+<section id="algorithm">
+<h2>Classification Algorithm</h2>
+<p>The WHO 2020 hierarchical sequential classifier assigns one primary subtype in strict priority order. If a sample meets criteria for multiple subtypes, the highest-priority class is assigned and the others are reported as secondary features.</p>
+
+<div class="flowchart">
+  <div class="flow-step flow-positive">
+    <span class="flow-num">1</span>
+    <span class="flow-label">POLE pathogenic EDM?</span>
+    <span class="flow-arrow">Yes &rarr;</span>
+    <span class="badge subtype-POLEmut">POLEmut</span>
+  </div>
+  <div class="flow-down">&darr; No</div>
+  <div class="flow-step flow-positive">
+    <span class="flow-num">2</span>
+    <span class="flow-label">MMR deficiency?</span>
+    <span class="flow-arrow">Yes &rarr;</span>
+    <span class="badge subtype-MMRd">MMRd</span>
+  </div>
+  <div class="flow-down">&darr; No</div>
+  <div class="flow-step flow-positive">
+    <span class="flow-num">3</span>
+    <span class="flow-label">Pathogenic TP53 mutation?</span>
+    <span class="flow-arrow">Yes &rarr;</span>
+    <span class="badge subtype-p53abn">p53abn</span>
+  </div>
+  <div class="flow-down">&darr; No</div>
+  <div class="flow-step flow-neutral">
+    <span class="flow-num">4</span>
+    <span class="flow-label">None of the above</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="badge subtype-NSMP">NSMP</span>
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>Priority</th><th>Subtype</th><th>Prognosis</th><th>Clinical implication</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><span class="badge subtype-POLEmut">POLEmut</span></td><td>Best</td><td>No adjuvant treatment for stage I&ndash;II (Swedish guidelines)</td></tr>
+    <tr><td>2</td><td><span class="badge subtype-MMRd">MMRd</span></td><td>Intermediate</td><td>Checkpoint inhibitor benefit; Lynch syndrome screening</td></tr>
+    <tr><td>3</td><td><span class="badge subtype-p53abn">p53abn</span></td><td>Worst</td><td>Postoperative chemotherapy for stage I&ndash;II</td></tr>
+    <tr><td>4</td><td><span class="badge subtype-NSMP">NSMP</span></td><td>Intermediate</td><td>Diagnosis of exclusion; ER status sub-stratifies</td></tr>
+  </tbody>
+</table>
+</section>
+
+{# ================================================ #}
+<section id="pole">
+<h2>POLE Assessment</h2>
+<p>Pathogenic mutations in the POLE exonuclease domain (exons {{ pole_edm.exons|join("&ndash;") }}, codons {{ pole_edm.codon_range[0] }}&ndash;{{ pole_edm.codon_range[1] }}) define the POLEmut subtype.</p>
+
+<h3>Tier 1 &mdash; Established hotspots</h3>
+<p>Auto-classified as POLEmut regardless of other features.</p>
+<p>{% for v in pole_tier1 %}<code>{{ v.protein_change }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<h3>Tier 2 &mdash; Confirmed pathogenic</h3>
+<p>Auto-classified as POLEmut. Based on Leon-Castillo et al. 2020 scoring system.</p>
+<p>{% for v in pole_tier2 %}<code>{{ v.protein_change }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<h3>VUS in exonuclease domain</h3>
+<p>Missense variants within codons {{ pole_edm.codon_range[0] }}&ndash;{{ pole_edm.codon_range[1] }} that are not in the curated list are flagged as VUS. They are <strong>not auto-classified</strong> as POLEmut. Secondary evidence is required: TMB &gt;100 mut/Mb, SBS10a/SBS10b signature, C&gt;A &gt;20%.</p>
+
+<h3>Outside exonuclease domain</h3>
+<p>Mutations outside exons {{ pole_edm.exons|join("&ndash;") }} are not classified as POLEmut.</p>
+</section>
+
+{# ================================================ #}
+<section id="mmr">
+<h2>MMR / MSI Assessment</h2>
+<p>MMR deficiency is assessed from two independent sources:</p>
+
+<h3>1. MSI marker percentage (primary)</h3>
+<p>If MSI marker data is available (from the panel's microsatellite markers), the percentage of unstable sites is used directly:</p>
+<ul>
+  <li><strong>MSI-H:</strong> &ge;20% unstable markers (configurable threshold) &rarr; MMRd</li>
+  <li><strong>MSI-L:</strong> &gt;0% but &lt;20% &rarr; not classified as MMRd</li>
+  <li><strong>MSS:</strong> 0% &rarr; not classified as MMRd</li>
+</ul>
+
+<h3>2. MMR gene mutations (supporting)</h3>
+<p>Pathogenic variants in MLH1, MSH2, MSH6, PMS2, or EPCAM are evaluated for biallelic inactivation:</p>
+<ul>
+  <li><strong>Biallelic</strong> (2+ hits in same gene): supports MMRd even if MSI markers are low</li>
+  <li><strong>Single heterozygous:</strong> does NOT confirm MMRd &mdash; flagged as possible Lynch carrier, IHC recommended</li>
+</ul>
+
+<h3>Important note</h3>
+<p>Even with MSI marker data, <strong>IHC for MLH1/MSH2/MSH6/PMS2 is recommended</strong> for Lynch syndrome screening (identifies which protein is lost, guiding germline testing).</p>
+</section>
+
+{# ================================================ #}
+<section id="tp53">
+<h2>TP53 Assessment</h2>
+<p>The DNA-binding domain spans codons {{ tp53_dbd.codon_start }}&ndash;{{ tp53_dbd.codon_end }}.</p>
+
+<h3>Hotspot mutations</h3>
+<p>Established pathogenic hotspots (auto-classified as p53abn):</p>
+<p>{% for h in tp53_hotspots %}<code>{{ h }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<h3>Truncating variants</h3>
+<p>Nonsense, frameshift, and splice-site mutations in TP53 are classified as pathogenic.</p>
+
+<h3>Exclusions</h3>
+<ul>
+  <li><strong>P72R/R72P:</strong> Benign polymorphism &mdash; excluded from classification.</li>
+  <li><strong>Low-VAF variants:</strong> Subclonal variants below 5% VAF are flagged but not auto-classified.</li>
+</ul>
+
+<h3>Important caveat</h3>
+<p>TP53 sequencing and p53 IHC have ~92% concordance. This tool uses sequencing data as a surrogate. <strong>p53 IHC confirmation is recommended.</strong> In particular, TP53 deletions and loss of heterozygosity may show p53-null IHC pattern but appear wild-type by panel sequencing.</p>
+</section>
+
+{# ================================================ #}
+<section id="evidence">
+<h2>Secondary Evidence</h2>
+<p>Each classification is scored against expected secondary genomic features. Concordance strengthens confidence; discordance may indicate misclassification or unusual biology.</p>
+
+<table>
+  <thead><tr><th>Subtype</th><th>Expected TMB</th><th>Expected CNA</th><th>Expected signatures</th><th>Substitution spectrum</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge subtype-POLEmut">POLEmut</span></td><td>&gt;100 mut/Mb</td><td>Low</td><td>SBS10a, SBS10b</td><td>C&gt;A &gt;20%, T&gt;G &gt;4%, C&gt;G &lt;0.6%, indels &lt;5%</td></tr>
+    <tr><td><span class="badge subtype-MMRd">MMRd</span></td><td>10&ndash;100 mut/Mb</td><td>Low&ndash;intermediate</td><td>SBS6, SBS15, SBS21, SBS26</td><td>High indel fraction (&gt;15%)</td></tr>
+    <tr><td><span class="badge subtype-p53abn">p53abn</span></td><td>&lt;10 mut/Mb</td><td>High</td><td>SBS1, SBS5 (clock)</td><td>&mdash;</td></tr>
+    <tr><td><span class="badge subtype-NSMP">NSMP</span></td><td>&lt;10 mut/Mb</td><td>Low</td><td>SBS1, SBS5 (clock)</td><td>&mdash;</td></tr>
+  </tbody>
+</table>
+</section>
+
+{# ================================================ #}
+<section id="confidence">
+<h2>Confidence Levels</h2>
+<table>
+  <thead><tr><th>Level</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge confidence-high">High</span></td><td>Primary classifier present + all secondary evidence concordant</td></tr>
+    <tr><td><span class="badge confidence-moderate">Moderate</span></td><td>Primary classifier present but some secondary evidence is discordant or unavailable</td></tr>
+    <tr><td><span class="badge confidence-low">Low</span></td><td>Borderline case: POLE VUS, single heterozygous MMR hit, TP53 VUS</td></tr>
+    <tr><td><span class="badge confidence-discordant">Discordant</span></td><td>Primary classifier contradicted by secondary evidence (e.g., POLE hotspot but TMB &lt;10)</td></tr>
+  </tbody>
+</table>
+</section>
+
+{# ================================================ #}
+<section id="limitations">
+<h2>Limitations</h2>
+<ol>
+  <li><strong>Research and clinical decision support only.</strong> Final molecular classification must be confirmed by a molecular pathologist in the context of histopathology and clinical information.</li>
+  <li><strong>MMR status from sequencing is less reliable than IHC.</strong> IHC for MLH1/MSH2/MSH6/PMS2 is the clinical standard for MMR assessment. Panel sequencing may miss promoter methylation (MLH1), large deletions, and other mechanisms of MMR loss.</li>
+  <li><strong>POLE VUS require secondary evidence.</strong> Variants of uncertain significance in the exonuclease domain are not auto-classified. TMB &gt;100 mut/Mb and SBS10a/SBS10b signature support are needed.</li>
+  <li><strong>TP53 sequencing does not replace p53 IHC.</strong> Concordance is ~92%. Tumors with TP53 deletions or LOH may appear wild-type by sequencing but show aberrant (null pattern) p53 IHC. This is particularly relevant for serous carcinomas.</li>
+  <li><strong>Signature decomposition quality depends on variant count.</strong> Small panels (&lt;300 genes) may yield unreliable signature fits. The tool uses substitution spectrum analysis (C&gt;A, C&gt;G fractions) as a more robust alternative for panel data.</li>
+  <li><strong>Multiple classifiers (3&ndash;6% of cases):</strong> Some tumors meet criteria for multiple subtypes. The hierarchical algorithm assigns one primary class, but all features are reported. Published evidence shows prognosis follows the highest-priority class (e.g., POLEmut+p53abn behaves like POLEmut).</li>
+</ol>
+</section>
+
+{# ================================================ #}
+<section id="references">
+<h2>References</h2>
+<ol>
+  <li>Swedish national guidelines: Nationellt vardprogram livmoderkroppscancer v3.2 (2026-03-10)</li>
+  <li>ESGO-ESTRO-ESP guidelines update 2025 (Lancet Oncology)</li>
+  <li>FIGO 2023 staging system for endometrial cancer</li>
+  <li>Leon-Castillo A, et al. Interpretation of somatic POLE mutations in endometrial carcinoma. <em>J Pathol.</em> 2020;250(3):323-335.</li>
+  <li>Leon-Castillo A, et al. Clinicopathological and molecular characterisation of multiple-classifier endometrial carcinomas. <em>J Pathol.</em> 2020;250(4):413-422.</li>
+  <li>Cancer Genome Atlas Research Network. Integrated genomic characterization of endometrial carcinoma. <em>Nature.</em> 2013;497(7447):67-73.</li>
+  <li>WHO Classification of Female Genital Tumours, 5th edition (2020)</li>
+</ol>
+</section>
+
+{% endblock %}
