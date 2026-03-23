@@ -1,0 +1,13 @@
+{
+  "sample_id": "DEMO-EC-005",
+  "tmb": 145.0,
+  "panel_size_mb": 1.26,
+  "msi_pct": 0.0,
+  "fraction_genome_altered": 0.02,
+  "signature_weights": {
+    "SBS10a": 0.35,
+    "SBS10b": 0.20,
+    "SBS1": 0.10,
+    "SBS5": 0.08
+  }
+}

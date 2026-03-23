@@ -1,0 +1,8 @@
+sample_id	primary_subtype	confidence	figo_annotation	multiple_classifier	secondary_features	tmb	cna_burden	n_flags
+mmrd_biallelic	MMRd	high	IAmMMRd	False		38.0	0.100	1
+mmrd_msih	MMRd	high	IAmMMRd	False		42.0	0.120	0
+multiple_pole_p53	POLEmut	moderate	IAmPOLEmut	True	MMRd;p53abn	198.0	0.040	0
+nsmp_endometrioid	NSMP	high		False		2.4	0.060	0
+p53abn_serous	p53abn	high	IIICp53abn	False		3.8	0.580	0
+polemut_clear	POLEmut	moderate	IAmPOLEmut	True	p53abn	232.5	0.030	0
+polemut_vus	NSMP	moderate		False		145.0	0.020	1

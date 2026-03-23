@@ -1,0 +1,8 @@
+#version 2.4
+Hugo_Symbol	Chromosome	Start_Position	End_Position	Reference_Allele	Tumor_Seq_Allele2	Variant_Classification	HGVSp_Short	t_alt_count	t_ref_count	Tumor_Sample_Barcode
+TP53	17	7578406	7578406	C	T	Missense_Mutation	p.R175H	92	28	DEMO-EC-003
+PIK3CA	3	178936091	178936091	G	A	Missense_Mutation	p.E545K	55	65	DEMO-EC-003
+PPP2R1A	19	52714485	52714485	G	A	Missense_Mutation	p.R183W	48	72	DEMO-EC-003
+FBXW7	4	153247289	153247289	G	A	Missense_Mutation	p.R465H	40	80	DEMO-EC-003
+SPOP	17	47689700	47689700	C	T	Missense_Mutation	p.D130N	30	90	DEMO-EC-003
+CSMD3	8	113849781	113849781	G	A	Missense_Mutation	p.S1234N	22	98	DEMO-EC-003

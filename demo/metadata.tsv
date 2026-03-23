@@ -1,0 +1,8 @@
+sample_id	tmb	panel_size_mb	msi_pct	fraction_genome_altered
+polemut_clear	232.5	1.26	1.8	0.03
+mmrd_msih	42.0	1.26	48.0	0.12
+p53abn_serous	3.8	1.26	0.0	0.58
+nsmp_endometrioid	2.4	1.26	0.0	0.06
+polemut_vus	145.0	1.26	0.0	0.02
+mmrd_biallelic	38.0	1.26	5.0	0.10
+multiple_pole_p53	198.0	1.26	32.0	0.04

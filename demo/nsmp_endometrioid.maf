@@ -1,0 +1,7 @@
+#version 2.4
+Hugo_Symbol	Chromosome	Start_Position	End_Position	Reference_Allele	Tumor_Seq_Allele2	Variant_Classification	HGVSp_Short	t_alt_count	t_ref_count	Tumor_Sample_Barcode
+PTEN	10	89692905	89692905	C	T	Nonsense_Mutation	p.R233*	60	40	DEMO-EC-004
+PIK3CA	3	178952085	178952085	A	G	Missense_Mutation	p.H1047R	55	65	DEMO-EC-004
+ARID1A	1	27100181	27100181	C	T	Nonsense_Mutation	p.Q1334*	50	70	DEMO-EC-004
+CTNNB1	3	41266101	41266101	A	G	Missense_Mutation	p.S33C	45	75	DEMO-EC-004
+KRAS	12	25398285	25398285	C	A	Missense_Mutation	p.G12D	42	78	DEMO-EC-004
