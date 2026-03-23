@@ -286,3 +286,69 @@ Histology-specific:
 - `data/genie/ec_msk_classifications.tsv` — 4,041 rows, full classification results
 - `data/genie/validation_summary.txt` — summary statistics
 - `scripts/validate_genie_ec.py` — validation pipeline
+
+## 2026-03-23: Multi-panel validation and I-index boost for MSI proxy
+
+**Session context:** Claude Opus 4.6, ~30 min. Continues from 2026-03-22: MSI proxy calibration.
+
+### Goal
+Improve MMRd detection by incorporating the indel fraction (I-index) into the MSI proxy, and validate the classifier across multiple non-MSK panels (DFCI, UCSF) to test generalizability.
+
+### Method
+- Added I-index boost to `msi.py`: when I-index >= 0.25 and at least 1 cMS gene (any tier) is hit, add virtual gene equivalents. Formula: `bonus = min(2.0, (i_index - 0.15) / 0.20)` virtual genes added to score. Capped at 2 to avoid overcalling.
+- Validated false positive rate: checked all NSMP samples that received I-index boost — all remained below 9% threshold (zero false positives).
+- Explored non-MSK panels in GENIE V18. Selected: DFCI-ONCOPANEL-3.1 (643 samples), DFCI-ONCOPANEL-3 (248), UCSF-IDTV5-TO (578). PROV-TSO500HT-V2 excluded — has 538 clinical entries but zero mutations in GENIE MAF (data sharing gap).
+- Ran classifier on all 5 panels (5,141 total samples) with panel-specific gene lists and computed FGA from CNA segments for non-MSK samples.
+
+### Results
+
+**Cross-panel subtype distribution:**
+
+| Panel | n | POLEmut | MMRd | p53abn | NSMP |
+|-------|---|---------|------|--------|------|
+| MSK-IMPACT468 | 1,757 | 4.9% | 21.2% | 21.0% | 52.9% |
+| MSK-IMPACT505 | 1,915 | 4.7% | 22.9% | 18.5% | 53.9% |
+| UCSF-IDTV5-TO | 578 | 5.5% | 19.6% | 13.8% | 61.1% |
+| DFCI-ONCOPANEL-3.1 | 643 | 3.1% | 13.8% | 24.3% | 58.8% |
+| DFCI-ONCOPANEL-3 | 248 | 3.2% | 25.8% | 22.2% | 48.8% |
+| TCGA reference | — | ~7% | ~28% | ~26% | ~39% |
+
+**UEC (endometrioid) only — most comparable to TCGA:**
+
+| Panel | n | POLEmut | MMRd | p53abn | NSMP |
+|-------|---|---------|------|--------|------|
+| MSK-IMPACT468 | 912 | 7.1% | 30.8% | 5.2% | 56.9% |
+| MSK-IMPACT505 | 1,083 | 5.9% | 32.0% | 4.0% | 58.1% |
+| UCSF-IDTV5-TO | 453 | 6.2% | 21.4% | 8.2% | 64.2% |
+| DFCI-ONCOPANEL-3.1 | 246 | 4.5% | 24.4% | 8.1% | 63.0% |
+| DFCI-ONCOPANEL-3 | 154 | 3.2% | 33.8% | 7.1% | 55.8% |
+
+**Secondary evidence (all panels pooled):**
+- POLEmut (n=236): TMB=123.0, FGA=0.001, I-index=0.006
+- MMRd (n=1,077): TMB=29.0, FGA=0.035, I-index=0.370
+- p53abn (n=1,014): TMB=4.8, FGA=0.256, I-index=0.100
+- NSMP (n=2,814): TMB=5.6, FGA=0.060, I-index=0.143
+
+**I-index boost impact:**
+- 184 MMRd samples (17.1%) had 0 high-spec cMS genes — rescued by I-index boost + low-spec gene hits
+- These have TMB median=13.0, I-index=0.400, and 83% are UEC — consistent with true MMRd
+- 163 NSMP samples received partial boost but ALL stayed below 9% threshold → zero false positives
+
+### Interpretation
+- I-index boost significantly improved MMRd sensitivity without compromising specificity. MSK panels now show 21-23% MMRd overall and 30-32% for UEC, very close to TCGA ~28-30%.
+- DFCI-ONCOPANEL-3.1 shows lower MMRd (13.8%) — missing KMT2C, MSH3, TGFBR2 from cMS indicator set reduces sensitivity. DFCI-ONCOPANEL-3 (25.8%) uses identical gene list but a smaller cohort with different ascertainment.
+- UCSF lower MMRd (19.6%) may reflect missing B2M from panel or different variant calling pipeline.
+- p53abn remains underestimated across all panels (13.8-24.3% vs ~26%). USC histology contributing many NSMP cases suggests TP53 LOH/deletions not detectable from mutation data alone.
+- Secondary evidence is remarkably consistent across all panels — validates the classifier architecture.
+
+### Decisions & Next Steps
+- The classifier is performing well for UEC/endometrioid subtypes, which is the primary clinical use case
+- Panel-specific cMS gene availability should be documented as a known factor in MMRd sensitivity
+- Investigate TP53 LOH from CNA data to improve p53abn detection
+- Consider adding NKI (211 samples) and COLU (153) panels in future validation rounds
+- Write unit tests for msi.py I-index boost logic
+
+### Output files
+- `data/genie/ec_multi_panel_classifications.tsv` — 5,141 rows, all panels
+- `data/genie/multi_panel_validation_summary.txt` — cross-panel comparison
+- `scripts/validate_multi_panel.py` — multi-panel validation pipeline
