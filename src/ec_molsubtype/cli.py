@@ -27,12 +27,22 @@ app = typer.Typer(
 def classify(
     maf_path: Path = typer.Argument(..., help="Path to MAF file"),
     metadata: Path | None = typer.Option(None, "--metadata", "-m", help="Path to JSON metadata sidecar"),
+    seg: Path | None = typer.Option(None, "--seg", help="Path to CBS segmentation file (.seg) for FGA computation"),
     output: Path | None = typer.Option(None, "--output", "-o", help="Output file path (JSON)"),
     msi_threshold: float = typer.Option(20.0, "--msi-threshold", help="MSI percentage threshold for MSI-H"),
     human_readable: bool = typer.Option(False, "--human", "-H", help="Print human-readable output"),
 ) -> None:
     """Classify a single sample from a MAF file."""
     sample = load_sample(maf_path, metadata_path=metadata)
+
+    # Compute FGA from SEG file if provided and not already in metadata
+    if seg and sample.metadata.fraction_genome_altered is None:
+        from .cna import compute_fga_from_seg
+
+        fga = compute_fga_from_seg(seg.read_text(), sample_id=sample.metadata.sample_id)
+        sample.metadata.fraction_genome_altered = fga
+        typer.echo(f"FGA computed from SEG file: {fga:.3f}")
+
     result = classify_sample(sample, msi_threshold=msi_threshold)
 
     if output:

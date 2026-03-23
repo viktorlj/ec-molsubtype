@@ -9,6 +9,7 @@ from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from ...classify import classify_sample
+from ...cna import compute_fga_from_seg
 from ...io import load_maf_variants_from_content, parse_maf_content
 from ...models import SampleInput, SampleMetadata
 from ...report import result_to_dict
@@ -30,6 +31,7 @@ async def classify(
     request: Request,
     maf_file: UploadFile = File(...),
     metadata_file: UploadFile | None = File(None),
+    seg_file: UploadFile | None = File(None),
     sample_id: str = Form(""),
     tmb: str = Form(""),
     msi_pct: str = Form(""),
@@ -72,6 +74,12 @@ async def classify(
                 mmr_ihc_pms2=mmr_ihc_pms2.strip() or None,
                 p53_ihc=p53_ihc.strip() or None,
             )
+
+        # Compute FGA from SEG file if provided and no FGA in metadata
+        if seg_file and seg_file.filename and metadata.fraction_genome_altered is None:
+            seg_content = (await seg_file.read()).decode("utf-8")
+            fga = compute_fga_from_seg(seg_content, sample_id=metadata.sample_id)
+            metadata.fraction_genome_altered = fga
 
         sample = SampleInput(metadata=metadata, variants=variants)
         threshold = float(msi_threshold) if msi_threshold else 20.0
