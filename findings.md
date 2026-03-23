@@ -137,21 +137,33 @@ This enables direct validation of the secondary evidence module's substitution p
 ## Emerging Hypotheses
 
 ### H1: Panel-based molecular subtyping can reproduce TCGA EC classifications with >85% concordance
-- **Falsifiable test:** Run classifier on GENIE samples, cross-reference with any available TCGA overlap or published MSK cohort subtype calls
-- **Priority:** High — this is the primary validation goal
+- **Status: SUPPORTED** (tested 2026-03-23)
+- TCGA PanCancer validation: **86.8% accuracy** (507 samples). CPTAC: **90.5%** (95 samples).
+- Per-subtype F1: POLEmut 96.8%, MMRd 90.5%, p53abn 86.7%, NSMP 81.0%.
+- Key enabler: TP53 DBD missense reclassification (+12% accuracy).
 
 ### H2: MMRd detection from panel data without MSI markers will have lower sensitivity than MSI-based detection
-- **Falsifiable test:** Compare MMRd calls using only MMR gene mutations vs. GENIE TMB-high + MMR-mutated as a proxy. If available, compare against published IHC data for MSK EC cohorts
-- **Priority:** High — MMRd is the most clinically actionable subtype for immunotherapy
+- **Status: SUPPORTED** (tested 2026-03-23)
+- Categorical MSI status (CPTAC): MMRd recall **100%** (25/25).
+- Continuous MSIsensor score (TCGA, threshold 10): MMRd recall **83.8%** (124/148). 23 missed cases all have MSIsensor <10 but MANTIS >=0.4 (borderline).
+- cMS proxy (GENIE, no MSI markers): UEC MMRd rate **29-32%** on MSK panels (vs ~28-30% expected) — effective but lower ceiling than direct MSI measurement.
+- Sensitivity hierarchy: categorical MSI (100%) > MSIsensor continuous (84%) > cMS proxy + I-index (~80-90%).
 
 ### H3: TP53 wild-type tumors with high CIN represent undetected p53abn cases (large deletions/LOH)
-- **Falsifiable test:** Identify TP53-WT samples with FGA > 0.3; check if they cluster with serous histology (USC) and have low TMB. If so, these may be p53-null by IHC but undetectable by panel sequencing
-- **Priority:** Medium — affects classifier sensitivity for p53abn subtype
+- **Status: SUPPORTED** (tested 2026-03-23)
+- TCGA: 29 ground-truth p53abn cases classified as NSMP (no TP53 point mutation). FGA median **0.493** — clearly CIN-high.
+- GENIE: **148 TP53-WT samples with FGA > 0.3**. Enriched in UCS (6.6%), UCCC (15.3%). TMB median 4.0 (low, ruling out POLEmut/MMRd).
+- These are likely p53-null by IHC but undetectable by mutation-only sequencing. Represents an inherent ~6% accuracy ceiling for sequencing-based p53abn classification.
 
 ### H4: Coding microsatellite frameshift counting at >= 3 panel-covered loci can identify MMRd with >= 80% sensitivity in GENIE EC data
-- **Falsifiable test:** Count cMS frameshifts at TGFBR2/RNF43/MSH6/MSH3/ARID1A/PTEN/JAK1/MRE11A/B2M/AXIN2/KMT2C/APC/TCF7L2 in GENIE EC samples. Compare against TMB 10-100 + high indel fraction as an orthogonal MMRd proxy. Sensitivity should be >= 80% against the proxy.
-- **Priority:** High — this is the core question for MAF-only MMRd detection
+- **Status: PARTIALLY SUPPORTED / REVISED** (tested 2026-03-23)
+- >= 3 high-specificity cMS genes alone captures only ~10% of all EC as MMRd (too strict with ACVR2A absent from MSK-IMPACT).
+- **Revised approach**: 1+ high-spec cMS gene with I-index boost achieves UEC MMRd rate of **29-32%** on MSK panels — matching TCGA reference (~28-30%).
+- The original threshold was too stringent for MSK-IMPACT panels which lack ACVR2A (the #1 MSI indicator). The I-index provides the missing sensitivity.
 
 ### H5: The I index (indel/total mutation ratio) threshold for MSI-H on MSK-IMPACT panels is lower than the 9% published for a 382-gene CRC panel
-- **Falsifiable test:** Compute I index distributions for GENIE EC samples stratified by TMB bin and cMS count. If the bimodal separation between MSI-H and MSS occurs at a lower threshold (e.g., 5-7%), the panel composition affects the ratio.
-- **Priority:** Medium — calibration needed before clinical application
+- **Status: NOT SUPPORTED** (tested 2026-03-23)
+- MMRd I-index: median **0.370**, IQR [0.277-0.436].
+- NSMP I-index: median **0.143**, IQR [0.000-0.267].
+- The bimodal separation is at **~0.25**, not lower than 9%. The 9% threshold from Kim et al. was derived from a different context (382-gene CRC panel, different variant calling pipeline). On MSK-IMPACT with standard filtering, the I-index is higher in baseline because panels enrich for coding regions where indels are more common.
+- **Practical implication**: I-index >= 0.25 (not 9%) is the appropriate threshold for MSK-IMPACT MMRd support.
