@@ -179,10 +179,29 @@ def compute_msi_proxy(
     high_list = sorted(high_hit)
     low_list = sorted(low_hit)
     n_high_hit = len(high_list)
-
-    # pseudo_msi_pct based on high-specificity genes only
-    pseudo_msi_pct = (n_high_hit / n_high_total * 100) if n_high_total > 0 else 0.0
     i_index = (n_indels / n_mutations) if n_mutations > 0 else 0.0
+
+    # --- Composite pseudo_msi_pct ---
+    # Base score from high-specificity cMS genes
+    base_pct = (n_high_hit / n_high_total * 100) if n_high_total > 0 else 0.0
+
+    # I-index boost: when indel fraction is strongly MMRd-like (>= 0.25)
+    # and there are enough mutations for reliable estimation (>= 10),
+    # add a bonus to account for MSI at unmonitored loci (e.g., ACVR2A).
+    #
+    # Rationale: MMRd tumors have I-index ~0.35-0.40 while MSS is ~0.15.
+    # A high I-index with even 1 cMS hit or low-spec gene hit is strong
+    # evidence of MSI that our sparse indicator set underestimates.
+    #
+    # Bonus formula: each 20% of I-index above 0.15 ≈ 1 virtual gene hit,
+    # capped at 2 virtual genes. Requires at least 1 cMS gene (any tier).
+    indel_bonus = 0.0
+    n_any_cms_hit = n_high_hit + len(low_list)
+    if i_index >= 0.25 and n_mutations >= 10 and n_any_cms_hit >= 1:
+        virtual_genes = min(2.0, (i_index - 0.15) / 0.20)
+        indel_bonus = (virtual_genes / n_high_total * 100) if n_high_total > 0 else 0.0
+
+    pseudo_msi_pct = base_pct + indel_bonus
 
     # Build details
     parts = [
@@ -192,6 +211,8 @@ def compute_msi_proxy(
         parts.append(f"({', '.join(high_list)})")
     if low_list:
         parts.append(f"+ {len(low_list)} low-spec ({', '.join(low_list)})")
+    if indel_bonus > 0:
+        parts.append(f"+ I-index boost {indel_bonus:.1f}%")
     parts.append(f"-> pseudo_msi={pseudo_msi_pct:.1f}%.")
     parts.append(f"I-index={i_index:.3f} ({n_indels}/{n_mutations}).")
     details = " ".join(parts)
