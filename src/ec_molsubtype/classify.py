@@ -260,15 +260,32 @@ def _multiple_classifier_notes(
         f"Per WHO 2020 hierarchy, classified as {primary.value}."
     )
 
+    # Detail each secondary feature
+    if "MMRd" in mc.secondary_features:
+        mmr_detail = mc.mmr_evidence or "MMR deficiency"
+        notes.append(f"Concurrent MMRd evidence: {mmr_detail}.")
+    if "p53abn" in mc.secondary_features:
+        tp53_detail = mc.tp53_variant or "pathogenic TP53 variant"
+        notes.append(f"Concurrent p53abn evidence: {tp53_detail}.")
+    if "POLEmut" in mc.secondary_features:
+        pole_detail = mc.pole_variant or "pathogenic POLE EDM"
+        notes.append(f"Concurrent POLEmut evidence: {pole_detail}.")
+
+    # Prognostic interpretation based on published evidence
     if primary == MolecularSubtype.POLEmut and "p53abn" in mc.secondary_features:
         notes.append(
-            "Evidence shows POLEmut+p53abn behaves like POLEmut — "
-            "POLE status dominates prognosis."
+            "POLEmut+p53abn: evidence shows prognosis follows POLEmut "
+            "(León-Castillo et al. 2020). POLE status dominates."
         )
-    elif primary == MolecularSubtype.MMRd and "p53abn" in mc.secondary_features:
+    if primary == MolecularSubtype.POLEmut and "MMRd" in mc.secondary_features:
         notes.append(
-            "Evidence shows MMRd+p53abn behaves like MMRd — "
-            "MMR status dominates prognosis."
+            "POLEmut+MMRd: classify as POLEmut per hierarchy. "
+            "Note: patient may still benefit from immunotherapy evaluation."
+        )
+    if primary == MolecularSubtype.MMRd and "p53abn" in mc.secondary_features:
+        notes.append(
+            "MMRd+p53abn: evidence shows prognosis follows MMRd "
+            "(León-Castillo et al. 2020). Consider immunotherapy."
         )
 
     return notes

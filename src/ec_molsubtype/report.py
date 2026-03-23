@@ -112,8 +112,15 @@ def format_human_readable(result: ClassificationResult) -> str:
 
     # Multiple classifier
     if result.multiple_classifier.is_multiple:
+        mc = result.multiple_classifier
         lines.append(f"Multiple Classifier: Yes")
-        lines.append(f"  Secondary features: {', '.join(result.multiple_classifier.secondary_features)}")
+        lines.append(f"  Secondary features: {', '.join(mc.secondary_features)}")
+        if mc.tp53_variant:
+            lines.append(f"  TP53: {mc.tp53_variant}")
+        if mc.mmr_evidence:
+            lines.append(f"  MMR: {mc.mmr_evidence}")
+        if mc.pole_variant:
+            lines.append(f"  POLE: {mc.pole_variant}")
         lines.append("")
 
     # Clinical notes
