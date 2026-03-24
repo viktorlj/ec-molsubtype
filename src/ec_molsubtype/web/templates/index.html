@@ -1,98 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Classify — ec-molsubtype{% endblock %}
 {% block content %}
-<article>
-  <header>
-    <h1>Molecular Subtyping of Endometrial Cancer</h1>
-    <p>Upload a MAF file to classify into WHO 2020 molecular subtypes: POLEmut, MMRd, p53abn, or NSMP.</p>
-  </header>
 
-  <form action="/classify" method="post" enctype="multipart/form-data">
-    <div class="grid">
-      <label>
-        MAF file <small>(required)</small>
+<div class="mp-panel">
+  <p class="mp-eyebrow">WHO 2020 molecular classification</p>
+  <h1 style="margin-top: var(--mp-space-xs);">Endometrial cancer subtyping</h1>
+  <p class="mp-subtitle">Upload a MAF file to classify into POLEmut, MMRd, p53abn, or NSMP.</p>
+
+  <form action="/classify" method="post" enctype="multipart/form-data" class="classify-form">
+    <div class="upload-row">
+      <label class="file-field">
+        <span class="mp-section-title">MAF file <span class="required-dot"></span></span>
         <input type="file" name="maf_file" accept=".maf,.tsv,.txt" required>
       </label>
-      <label>
-        Metadata JSON <small>(optional)</small>
+      <label class="file-field">
+        <span class="mp-section-title">Metadata JSON</span>
         <input type="file" name="metadata_file" accept=".json">
       </label>
+      <label class="file-field">
+        <span class="mp-section-title">SEG file</span>
+        <input type="file" name="seg_file" accept=".seg,.tsv,.txt">
+      </label>
     </div>
-    <label>
-      SEG file <small>(optional &mdash; CBS segmentation for CNA/FGA computation)</small>
-      <input type="file" name="seg_file" accept=".seg,.tsv,.txt">
-    </label>
 
-    <details>
-      <summary>Manual metadata entry</summary>
-      <p><small>Use these fields if you don't have a JSON metadata sidecar. Values in the JSON file take precedence.</small></p>
-      <div class="grid">
-        <label>
-          Sample ID
-          <input type="text" name="sample_id" placeholder="e.g. SAMPLE-001">
-        </label>
-        <label>
-          TMB <small>(mut/Mb)</small>
-          <input type="number" name="tmb" step="0.1" placeholder="e.g. 45.0">
-        </label>
-      </div>
-      <div class="grid">
-        <label>
-          MSI % <small>(0&ndash;100)</small>
-          <input type="number" name="msi_pct" step="0.1" min="0" max="100" placeholder="e.g. 28.0">
-        </label>
-        <label>
-          Fraction genome altered <small>(0&ndash;1)</small>
-          <input type="number" name="fraction_genome_altered" step="0.01" min="0" max="1" placeholder="e.g. 0.55">
-        </label>
-      </div>
-      <label>
-        MSI threshold % <small>(default 20)</small>
-        <input type="number" name="msi_threshold" step="0.1" value="20.0" min="0" max="100">
-      </label>
+    <details class="metadata-details">
+      <summary class="mp-section-title">Manual metadata &amp; IHC entry</summary>
+      <div class="details-body">
+        <p class="mp-soft" style="font-size: var(--mp-fs-xs); margin-bottom: var(--mp-space-md);">Fill these if you don't have a JSON sidecar. JSON values take precedence.</p>
 
-      <h4>Immunohistochemistry <small>(if available)</small></h4>
-      <p><small>IHC results take precedence over sequencing for MMR and p53 classification.</small></p>
-      <div class="grid">
-        <label>
-          MLH1 IHC
-          <select name="mmr_ihc_mlh1"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
-        </label>
-        <label>
-          MSH2 IHC
-          <select name="mmr_ihc_msh2"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
-        </label>
-        <label>
-          MSH6 IHC
-          <select name="mmr_ihc_msh6"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
-        </label>
-        <label>
-          PMS2 IHC
-          <select name="mmr_ihc_pms2"><option value="">Not tested</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
-        </label>
+        <div class="form-grid-3">
+          <label>
+            <span class="mp-section-title">Sample ID</span>
+            <input type="text" name="sample_id" placeholder="SAMPLE-001">
+          </label>
+          <label>
+            <span class="mp-section-title">TMB (mut/Mb)</span>
+            <input type="number" name="tmb" step="0.1" placeholder="45.0">
+          </label>
+          <label>
+            <span class="mp-section-title">MSI %</span>
+            <input type="number" name="msi_pct" step="0.1" min="0" max="100" placeholder="28.0">
+          </label>
+        </div>
+        <div class="form-grid-3">
+          <label>
+            <span class="mp-section-title">FGA (0-1)</span>
+            <input type="number" name="fraction_genome_altered" step="0.01" min="0" max="1" placeholder="0.55">
+          </label>
+          <label>
+            <span class="mp-section-title">MSI threshold %</span>
+            <input type="number" name="msi_threshold" step="0.1" value="20.0" min="0" max="100">
+          </label>
+          <div></div>
+        </div>
+
+        <p class="mp-section-title" style="margin-top: var(--mp-space-lg);">Immunohistochemistry</p>
+        <p class="mp-soft" style="font-size: var(--mp-fs-xs); margin-bottom: var(--mp-space-sm);">IHC takes precedence over sequencing for MMR and p53.</p>
+        <div class="form-grid-5">
+          <label>
+            <span class="mp-section-title">MLH1</span>
+            <select name="mmr_ihc_mlh1"><option value="">-</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+          </label>
+          <label>
+            <span class="mp-section-title">MSH2</span>
+            <select name="mmr_ihc_msh2"><option value="">-</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+          </label>
+          <label>
+            <span class="mp-section-title">MSH6</span>
+            <select name="mmr_ihc_msh6"><option value="">-</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+          </label>
+          <label>
+            <span class="mp-section-title">PMS2</span>
+            <select name="mmr_ihc_pms2"><option value="">-</option><option value="intact">Intact</option><option value="lost">Lost</option></select>
+          </label>
+          <label>
+            <span class="mp-section-title">p53</span>
+            <select name="p53_ihc"><option value="">-</option><option value="wild_type">WT</option><option value="aberrant">Aberrant</option></select>
+          </label>
+        </div>
       </div>
-      <label>
-        p53 IHC
-        <select name="p53_ihc"><option value="">Not tested</option><option value="wild_type">Wild-type</option><option value="aberrant">Aberrant (overexpression or null)</option></select>
-      </label>
     </details>
 
-    <button type="submit">Classify</button>
+    <button type="submit" class="mp-btn-primary submit-btn">Classify sample</button>
   </form>
-</article>
+</div>
 
-<article>
-  <header><h3>Try a demo sample</h3></header>
-  <div class="grid">
-    <a href="/demo/polemut_clear" role="button" class="outline subtype-POLEmut">POLEmut</a>
-    <a href="/demo/mmrd_msih" role="button" class="outline subtype-MMRd">MMRd (MSI-H)</a>
-    <a href="/demo/p53abn_serous" role="button" class="outline subtype-p53abn">p53abn</a>
-    <a href="/demo/nsmp_endometrioid" role="button" class="outline subtype-NSMP">NSMP</a>
+<div class="mp-panel demo-panel">
+  <p class="mp-eyebrow">Demo samples</p>
+  <div class="demo-grid">
+    <a href="/demo/polemut_clear" class="demo-chip subtype-POLEmut">POLEmut</a>
+    <a href="/demo/mmrd_msih" class="demo-chip subtype-MMRd">MMRd (MSI-H)</a>
+    <a href="/demo/p53abn_serous" class="demo-chip subtype-p53abn">p53abn</a>
+    <a href="/demo/nsmp_endometrioid" class="demo-chip subtype-NSMP">NSMP</a>
+    <a href="/demo/multiple_pole_p53" class="demo-chip demo-edge">Triple classifier</a>
+    <a href="/demo/mmrd_biallelic" class="demo-chip demo-edge">Biallelic MMR</a>
+    <a href="/demo/polemut_vus" class="demo-chip demo-edge">POLE VUS</a>
   </div>
-  <div class="grid">
-    <a href="/demo/multiple_pole_p53" role="button" class="outline secondary">Triple classifier</a>
-    <a href="/demo/mmrd_biallelic" role="button" class="outline secondary">Biallelic MMR</a>
-    <a href="/demo/polemut_vus" role="button" class="outline secondary">POLE VUS</a>
-  </div>
-</article>
+</div>
+
 {% endblock %}

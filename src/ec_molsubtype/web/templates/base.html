@@ -1,38 +1,44 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}ec-molsubtype{% endblock %}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/molpath.css">
   <link rel="stylesheet" href="/static/style.css">
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 </head>
 <body>
-  <header class="container">
-    <nav>
-      <ul>
-        <li><a href="/" class="brand"><strong>ec-molsubtype</strong></a></li>
-      </ul>
-      <ul>
-        <li><a href="/">Classify</a></li>
-        <li><a href="/methods">Methods</a></li>
-      </ul>
-    </nav>
+  <div class="mp-background-glow"></div>
+
+  <header class="site-header">
+    <div class="mp-layout">
+      <nav class="mp-flex mp-between">
+        <a href="/" class="brand">
+          <span class="brand-mark">EC</span>
+          <span class="brand-name">molsubtype</span>
+        </a>
+        <div class="mp-flex nav-links">
+          <a href="/">Classify</a>
+          <a href="/methods">Methods</a>
+        </div>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
+  <main class="mp-layout mp-animate-in">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="container">
-    <hr>
-    <small>
-      ec-molsubtype v{{ version }} &mdash;
-      Research and clinical decision support only. Final classification must be confirmed by a molecular pathologist.
-      <br>
-      Based on WHO 2020 classification, FIGO 2023 staging, and Swedish national guidelines v3.2.
-    </small>
+  <footer class="site-footer">
+    <div class="mp-layout">
+      <p class="mp-soft" style="font-size: var(--mp-fs-xs); line-height: 1.6;">
+        ec-molsubtype v{{ version }}.
+        Research and clinical decision support only. Final classification must be confirmed by a molecular pathologist.<br>
+        Based on WHO 2020, FIGO 2023, and Swedish national guidelines v3.2.
+      </p>
+    </div>
   </footer>
 </body>
 </html>
