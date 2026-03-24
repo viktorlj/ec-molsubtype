@@ -186,9 +186,10 @@
   text-decoration: none;
   padding: 5px 14px;
   border-radius: 20px;
-  font-size: var(--mp-fs-xs);
-  font-weight: 600;
-  font-family: var(--mp-mono);
+  font-size: var(--mp-fs-sm);
+  font-weight: 500;
+  font-family: var(--mp-sans);
+  letter-spacing: 0.01em;
   color: #fff;
   transition: opacity var(--mp-transition), transform var(--mp-transition);
 }
