@@ -58,3 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(methods_router)
 
     return app
+
+
+# Module-level instance for uvicorn CLI (e.g., Cloud Run: uvicorn ec_molsubtype.web.app:app)
+app = create_app()

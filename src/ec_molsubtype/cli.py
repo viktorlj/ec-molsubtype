@@ -116,15 +116,19 @@ def check_pole(
 
 @app.command()
 def serve(
-    host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),
-    port: int = typer.Option(8000, "--port", help="Bind port"),
+    host: str = typer.Option("0.0.0.0", "--host", help="Bind host"),
+    port: int = typer.Option(None, "--port", help="Bind port (default: $PORT or 8000)"),
     reload: bool = typer.Option(False, "--reload", help="Auto-reload on changes"),
 ) -> None:
     """Start the web interface."""
+    import os
+
     import uvicorn
 
     from .web.app import create_app
 
+    if port is None:
+        port = int(os.environ.get("PORT", "8000"))
     web_app = create_app()
     typer.echo(f"Starting ec-molsubtype web interface at http://{host}:{port}")
     uvicorn.run(web_app, host=host, port=port)

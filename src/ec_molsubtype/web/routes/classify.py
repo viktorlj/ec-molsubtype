@@ -17,7 +17,20 @@ from ..pdf import generate_pdf
 
 router = APIRouter()
 
-DEMO_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "demo"
+# Resolve demo dir: check common locations (repo root, container /app)
+def _find_demo_dir() -> Path:
+    candidates = [
+        Path(__file__).resolve().parent.parent.parent.parent.parent / "demo",  # dev: src/ec_molsubtype/web/routes -> repo root
+        Path("/app/demo"),  # container
+        Path.cwd() / "demo",  # cwd fallback
+    ]
+    for p in candidates:
+        if p.is_dir():
+            return p
+    return candidates[0]  # fallback even if missing
+
+
+DEMO_DIR = _find_demo_dir()
 
 
 @router.get("/", response_class=HTMLResponse)
