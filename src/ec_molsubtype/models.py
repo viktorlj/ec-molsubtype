@@ -192,7 +192,6 @@ class ClassificationResult(BaseModel):
     classification_path: list[ClassificationStep] = Field(default_factory=list)
     multiple_classifier: MultipleClassifier = Field(default_factory=MultipleClassifier)
     secondary_evidence: SecondaryEvidence = Field(default_factory=SecondaryEvidence)
-    figo_molecular_annotation: str = ""
     clinical_notes: list[str] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)
     version: str = "0.1.0"

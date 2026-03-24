@@ -51,22 +51,18 @@ def generate_pdf(result: dict) -> bytes:
     subtype = result.get("primary_subtype", "")
     confidence = result.get("confidence", "")
     sample_id = result.get("sample_id", "")
-    figo = result.get("figo_molecular_annotation", "")
 
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(pw, 7, f"Sample: {sample_id}", new_x="LMARGIN", new_y="NEXT")
 
     r, g, b = SUBTYPE_COLORS.get(subtype, (0, 0, 0))
-    pdf.set_font("Helvetica", "B", 20)
+    pdf.set_font("Helvetica", "B", 24)
     pdf.set_text_color(r, g, b)
-    pdf.cell(0, 12, subtype, new_x="END")
-    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 14, subtype, new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 12, f"   Confidence: {confidence}", new_x="LMARGIN", new_y="NEXT")
-    if figo:
-        pdf.set_font("Helvetica", "", 10)
-        pdf.cell(pw, 6, f"FIGO 2023 annotation: {figo}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(pw, 7, f"Confidence: {confidence}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     # --- Classification path ---

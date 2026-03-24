@@ -5,21 +5,23 @@
 {% set subtype = r.primary_subtype %}
 {% set confidence = r.confidence %}
 
-{# === Result header === #}
-<div class="mp-panel result-hero">
-  <div class="result-header">
+{# === Hero: dominant subtype display === #}
+<div class="mp-panel result-hero subtype-hero-{{ subtype }}">
+  <div class="hero-top">
     <div>
       <p class="mp-eyebrow">Classification result</p>
-      <h1 class="sample-id">{{ r.sample_id }}</h1>
+      <p class="sample-id mp-mono">{{ r.sample_id }}</p>
     </div>
-    <div class="result-badges">
-      <span class="badge subtype-{{ subtype }}">{{ subtype }}</span>
-      <span class="badge confidence-{{ confidence }}">{{ confidence }}</span>
-    </div>
+    <span class="badge confidence-{{ confidence }}">{{ confidence }} confidence</span>
   </div>
-  {% if r.figo_molecular_annotation %}
-  <p class="figo-annotation"><span class="mp-section-title">FIGO 2023</span> {{ r.figo_molecular_annotation }}</p>
-  {% endif %}
+  <div class="hero-subtype">{{ subtype }}</div>
+  <p class="hero-description">
+    {% if subtype == "POLEmut" %}POLE exonuclease domain mutation. Best prognosis. Swedish guidelines: no adjuvant treatment for stage I-II.
+    {% elif subtype == "MMRd" %}Mismatch repair deficient. Intermediate prognosis. Predictive for checkpoint inhibitor benefit.
+    {% elif subtype == "p53abn" %}TP53 aberrant / copy-number high. Worst prognosis. Swedish guidelines: postoperative chemotherapy for stage I-II.
+    {% elif subtype == "NSMP" %}No specific molecular profile. Intermediate prognosis. Diagnosis of exclusion.
+    {% endif %}
+  </p>
 </div>
 
 {# === Classification path === #}
