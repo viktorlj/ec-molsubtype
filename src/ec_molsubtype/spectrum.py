@@ -140,6 +140,75 @@ def compute_spectrum(variants: list[Variant]) -> SpectrumResult:
     )
 
 
+def _check_profile(spectrum: SpectrumResult, sub_profile: dict) -> tuple[int, int, dict]:
+    """Check a spectrum against a substitution profile. Returns (passed, total, checks)."""
+    checks: dict[str, dict] = {}
+    passed = 0
+    total = 0
+
+    for criterion, spec in sub_profile.items():
+        if criterion == "C>A_min":
+            observed = spectrum.fractions.get("C>A", 0.0)
+            ok = observed >= spec
+            checks["C>A"] = {"observed": round(observed, 4), "threshold": spec, "direction": ">=", "passed": ok}
+        elif criterion == "T>G_min":
+            observed = spectrum.fractions.get("T>G", 0.0)
+            ok = observed >= spec
+            checks["T>G"] = {"observed": round(observed, 4), "threshold": spec, "direction": ">=", "passed": ok}
+        elif criterion == "C>G_max":
+            observed = spectrum.fractions.get("C>G", 0.0)
+            ok = observed <= spec
+            checks["C>G"] = {"observed": round(observed, 4), "threshold": spec, "direction": "<=", "passed": ok}
+        elif criterion == "indel_fraction_max":
+            observed = spectrum.indel_fraction
+            ok = observed <= spec
+            checks["indel_fraction"] = {"observed": round(observed, 4), "threshold": spec, "direction": "<=", "passed": ok}
+        elif criterion == "indel_fraction_min":
+            observed = spectrum.indel_fraction
+            ok = observed >= spec
+            checks["indel_fraction"] = {"observed": round(observed, 4), "threshold": spec, "direction": ">=", "passed": ok}
+        else:
+            continue
+        total += 1
+        if ok:
+            passed += 1
+
+    return passed, total, checks
+
+
+def _screen_for_pole_mmrd(spectrum: SpectrumResult, data: dict) -> dict:
+    """Screen spectrum against POLE and MMRd profiles to flag potential misclassifications."""
+    alerts: list[str] = []
+    all_checks: dict[str, dict] = {}
+
+    # Screen against POLEmut
+    pole_profile = data["profiles"].get("POLEmut", {}).get("substitution_profile", {})
+    if pole_profile:
+        passed, total, checks = _check_profile(spectrum, pole_profile)
+        for k, v in checks.items():
+            all_checks[f"POLE_{k}"] = v
+        if passed == total:
+            alerts.append(f"Spectrum matches POLE ultramutated profile ({passed}/{total} criteria met) — consider POLE VUS review")
+        elif passed >= total - 1 and total > 1:
+            alerts.append(f"Spectrum partially matches POLE profile ({passed}/{total} criteria met)")
+
+    # Screen against MMRd
+    mmrd_profile = data["profiles"].get("MMRd", {}).get("substitution_profile", {})
+    if mmrd_profile:
+        passed, total, checks = _check_profile(spectrum, mmrd_profile)
+        for k, v in checks.items():
+            all_checks[f"MMRd_{k}"] = v
+        if passed == total:
+            alerts.append(f"Spectrum matches MMRd profile ({passed}/{total} criteria met) — consider MMR IHC")
+
+    if alerts:
+        details = " | ".join(alerts)
+    else:
+        details = "Spectrum does not suggest POLE or MMRd."
+
+    return {"checks": all_checks, "details": details}
+
+
 def _load_spectrum_thresholds() -> dict:
     """Load expected substitution profile thresholds from signature_profiles.json."""
     data_path = Path(__file__).parent / "data" / "signature_profiles.json"
@@ -179,77 +248,18 @@ def assess_spectrum(
     sub_profile = profile.get("substitution_profile", {})
 
     if not sub_profile:
+        # No thresholds for this subtype — screen against POLE and MMRd profiles
+        # to catch potential misclassifications
+        screen_result = _screen_for_pole_mmrd(spectrum, data)
         return SpectrumConcordance(
             concordant=None,
             spectrum=spectrum,
-            checks={},
-            details=f"No substitution profile thresholds defined for {subtype.value}.",
+            checks=screen_result["checks"],
+            details=screen_result["details"],
         )
 
-    checks: dict[str, dict] = {}
-    all_pass = True
-
-    # Evaluate each criterion in the substitution profile
-    for criterion, spec in sub_profile.items():
-        if criterion == "C>A_min":
-            observed = spectrum.fractions.get("C>A", 0.0)
-            passed = observed >= spec
-            checks["C>A"] = {
-                "observed": round(observed, 4),
-                "threshold": spec,
-                "direction": ">=",
-                "passed": passed,
-            }
-            if not passed:
-                all_pass = False
-
-        elif criterion == "T>G_min":
-            observed = spectrum.fractions.get("T>G", 0.0)
-            passed = observed >= spec
-            checks["T>G"] = {
-                "observed": round(observed, 4),
-                "threshold": spec,
-                "direction": ">=",
-                "passed": passed,
-            }
-            if not passed:
-                all_pass = False
-
-        elif criterion == "C>G_max":
-            observed = spectrum.fractions.get("C>G", 0.0)
-            passed = observed <= spec
-            checks["C>G"] = {
-                "observed": round(observed, 4),
-                "threshold": spec,
-                "direction": "<=",
-                "passed": passed,
-            }
-            if not passed:
-                all_pass = False
-
-        elif criterion == "indel_fraction_max":
-            observed = spectrum.indel_fraction
-            passed = observed <= spec
-            checks["indel_fraction"] = {
-                "observed": round(observed, 4),
-                "threshold": spec,
-                "direction": "<=",
-                "passed": passed,
-            }
-            if not passed:
-                all_pass = False
-
-        elif criterion == "indel_fraction_min":
-            observed = spectrum.indel_fraction
-            passed = observed >= spec
-            checks["indel_fraction"] = {
-                "observed": round(observed, 4),
-                "threshold": spec,
-                "direction": ">=",
-                "passed": passed,
-            }
-            if not passed:
-                all_pass = False
+    passed_count, total, checks = _check_profile(spectrum, sub_profile)
+    all_pass = passed_count == total
 
     # Build details string
     parts = []
