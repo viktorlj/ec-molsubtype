@@ -212,7 +212,7 @@ def classify_sample(
         clinical_notes=clinical_notes,
         flags=flags,
     )
-    return _finalize(result, meta)
+    return _finalize(result, meta, variants)
 
 
 def _finalize(result: ClassificationResult, meta, variants=None) -> ClassificationResult:
