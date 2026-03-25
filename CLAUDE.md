@@ -80,8 +80,8 @@ For each classification, compute concordance with secondary genomic features:
 
 |Subtype|Expected TMB                       |Expected CNA               |Expected signatures                                              |Other                                        |
 |-------|-----------------------------------|---------------------------|-----------------------------------------------------------------|---------------------------------------------|
-|POLEmut|Very high (>100 mut/Mb, often >200)|Low                        |SBS10a, SBS10b dominant; C>A >20%, T>G >4%, C>G <0.6%, indels <5%|                                             |
-|MMRd   |High (10–100 mut/Mb)               |Low–intermediate           |SBS6, SBS15, SBS21, SBS26; high indel fraction                   |                                             |
+|POLEmut|Very high (>100 mut/Mb, often >200)|Low                        |SBS10a, SBS10b dominant; C>A ≥10%, T>G ≥4%, C>G ≤2.5%, indels ≤5% (panel-calibrated)|                                             |
+|MMRd   |High (10–100 mut/Mb)               |Low–intermediate           |SBS6, SBS15, SBS21, SBS26; indel fraction ≥12% (panel-calibrated)|                                             |
 |p53abn |Low (<10 mut/Mb)                   |High (many arm-level SCNAs)|SBS1, SBS5 (clock signatures)                                    |Frequent co-mutations: PIK3CA, PPP2R1A, FBXW7|
 |NSMP   |Low (<10 mut/Mb)                   |Low                        |SBS1, SBS5                                                       |Often PTEN, PIK3CA, ARID1A mutated; ER+/PR+  |
 

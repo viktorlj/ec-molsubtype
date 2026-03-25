@@ -5,18 +5,18 @@
       "expected_signatures": ["SBS10a", "SBS10b"],
       "signature_threshold": 0.1,
       "substitution_profile": {
-        "C>A_min": 0.20,
+        "C>A_min": 0.10,
         "T>G_min": 0.04,
-        "C>G_max": 0.006,
+        "C>G_max": 0.025,
         "indel_fraction_max": 0.05
       },
-      "description": "POLE ultramutated: SBS10a/SBS10b dominant, high C>A, low indels"
+      "description": "POLE ultramutated: SBS10a (C>A) and/or SBS10b (T>C/T>G) dominant, low indels. Thresholds calibrated for panel data."
     },
     "MMRd": {
       "expected_signatures": ["SBS6", "SBS15", "SBS21", "SBS26"],
       "signature_threshold": 0.05,
       "substitution_profile": {
-        "indel_fraction_min": 0.15
+        "indel_fraction_min": 0.12
       },
       "description": "MMRd: SBS6/SBS15/SBS21/SBS26, high indel fraction"
     },
