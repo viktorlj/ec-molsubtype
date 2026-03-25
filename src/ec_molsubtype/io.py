@@ -64,19 +64,19 @@ def parse_maf(path: str | Path) -> pl.DataFrame:
 def maf_row_to_variant(row: dict) -> Variant:
     """Convert a MAF row (as dict) to a Variant model."""
     return Variant(
-        hugo_symbol=row.get("Hugo_Symbol", ""),
-        chromosome=row.get("Chromosome", ""),
-        start_position=int(row.get("Start_Position", 0) or 0),
-        end_position=int(row.get("End_Position", 0) or 0),
-        reference_allele=row.get("Reference_Allele", ""),
-        tumor_seq_allele2=row.get("Tumor_Seq_Allele2", ""),
-        variant_classification=row.get("Variant_Classification", ""),
-        hgvsp_short=row.get("HGVSp_Short", ""),
-        t_alt_count=int(row.get("t_alt_count", 0) or 0),
-        t_ref_count=int(row.get("t_ref_count", 0) or 0),
-        clinvar_classification=row.get("ClinVar_Classification", ""),
-        sift=row.get("SIFT", ""),
-        polyphen=row.get("PolyPhen", ""),
+        hugo_symbol=row.get("Hugo_Symbol") or "",
+        chromosome=row.get("Chromosome") or "",
+        start_position=int(row.get("Start_Position") or 0),
+        end_position=int(row.get("End_Position") or 0),
+        reference_allele=row.get("Reference_Allele") or "",
+        tumor_seq_allele2=row.get("Tumor_Seq_Allele2") or "",
+        variant_classification=row.get("Variant_Classification") or "",
+        hgvsp_short=row.get("HGVSp_Short") or "",
+        t_alt_count=int(row.get("t_alt_count") or 0),
+        t_ref_count=int(row.get("t_ref_count") or 0),
+        clinvar_classification=row.get("ClinVar_Classification") or "",
+        sift=row.get("SIFT") or "",
+        polyphen=row.get("PolyPhen") or "",
     )
 
 
