@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from .. import __version__
 from .routes.classify import router as classify_router
+from .routes.cli_docs import router as cli_docs_router
 from .routes.methods import router as methods_router
 
 WEB_DIR = Path(__file__).parent
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.state.results = ResultStore()
 
     app.include_router(classify_router)
+    app.include_router(cli_docs_router)
     app.include_router(methods_router)
 
     return app

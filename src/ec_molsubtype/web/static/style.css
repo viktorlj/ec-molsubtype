@@ -547,6 +547,33 @@
    Responsive
    ================================================================= */
 
+/* =================================================================
+   CLI documentation
+   ================================================================= */
+
+.cli-block {
+  background: var(--mp-surface);
+  border: 1px solid var(--mp-border);
+  border-radius: var(--mp-radius-sm);
+  padding: var(--mp-space-sm) var(--mp-space-md);
+  font-family: var(--mp-mono);
+  font-size: var(--mp-fs-sm);
+  line-height: 1.7;
+  overflow-x: auto;
+  margin: var(--mp-space-sm) 0;
+}
+
+.cli-block code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+
+/* =================================================================
+   Responsive
+   ================================================================= */
+
 @media (max-width: 700px) {
   .upload-row { grid-template-columns: 1fr; }
   .form-grid-3 { grid-template-columns: 1fr 1fr; }

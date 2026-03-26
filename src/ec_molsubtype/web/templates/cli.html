@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}CLI &amp; Installation — ec-molsubtype{% endblock %}
+{% block content %}
+
+<div class="mp-panel">
+  <p class="mp-eyebrow">Documentation</p>
+  <h1 style="margin-top: var(--mp-space-xs);">CLI &amp; Installation</h1>
+  <p class="mp-subtitle">Install locally and classify samples from the command line.</p>
+
+  <nav class="methods-nav">
+    <a href="#requirements">Requirements</a>
+    <a href="#install">Installation</a>
+    <a href="#classify">classify</a>
+    <a href="#classify-batch">classify-batch</a>
+    <a href="#check-pole">check-pole</a>
+    <a href="#serve">serve</a>
+    <a href="#input">Input formats</a>
+    <a href="#output">Output</a>
+  </nav>
+</div>
+
+<section id="requirements" class="mp-panel methods-section">
+  <p class="mp-section-title">Requirements</p>
+  <ul>
+    <li>Python &ge; 3.11</li>
+    <li><a href="https://docs.astral.sh/uv/" style="color: var(--mp-accent);">uv</a> (recommended) or pip</li>
+  </ul>
+</section>
+
+<section id="install" class="mp-panel methods-section">
+  <p class="mp-section-title">Installation</p>
+
+  <h3>From PyPI (when published)</h3>
+  <pre class="cli-block"><code>uv pip install ec-molsubtype</code></pre>
+
+  <h3>From source</h3>
+  <pre class="cli-block"><code>git clone https://github.com/viktorlj/ec-molsubtype.git
+cd ec-molsubtype
+uv venv &amp;&amp; source .venv/bin/activate
+uv pip install -e .</code></pre>
+
+  <p>After installation the <code class="mp-mono">ec-molsubtype</code> command is available in your shell.</p>
+
+  <pre class="cli-block"><code>ec-molsubtype --help</code></pre>
+</section>
+
+<section id="classify" class="mp-panel methods-section">
+  <p class="mp-section-title"><code class="mp-mono">classify</code></p>
+  <p>Classify a single sample from a MAF file.</p>
+
+  <pre class="cli-block"><code>ec-molsubtype classify sample.maf</code></pre>
+
+  <table class="methods-table">
+    <thead><tr><th>Argument / Option</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code class="mp-mono">MAF_PATH</code></td><td>Path to the MAF file (required)</td></tr>
+      <tr><td><code class="mp-mono">--metadata, -m</code></td><td>JSON metadata sidecar (sample_id, tmb, msi_pct, etc.)</td></tr>
+      <tr><td><code class="mp-mono">--seg</code></td><td>CBS segmentation file (.seg) for FGA computation</td></tr>
+      <tr><td><code class="mp-mono">--output, -o</code></td><td>Output file path. Writes JSON report to file instead of stdout</td></tr>
+      <tr><td><code class="mp-mono">--msi-threshold</code></td><td>MSI percentage threshold for MSI-H call (default: 20.0)</td></tr>
+      <tr><td><code class="mp-mono">--human, -H</code></td><td>Print human-readable summary instead of JSON</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Examples</h3>
+  <pre class="cli-block"><code># JSON output to stdout
+ec-molsubtype classify patient_01.maf
+
+# With metadata sidecar and SEG file
+ec-molsubtype classify patient_01.maf -m patient_01.json --seg patient_01.seg
+
+# Human-readable output
+ec-molsubtype classify patient_01.maf -H
+
+# Save JSON report to file
+ec-molsubtype classify patient_01.maf -o result.json</code></pre>
+</section>
+
+<section id="classify-batch" class="mp-panel methods-section">
+  <p class="mp-section-title"><code class="mp-mono">classify-batch</code></p>
+  <p>Classify all <code class="mp-mono">.maf</code> files in a directory and write a summary TSV.</p>
+
+  <pre class="cli-block"><code>ec-molsubtype classify-batch --input-dir ./samples/ --output results.tsv</code></pre>
+
+  <table class="methods-table">
+    <thead><tr><th>Option</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code class="mp-mono">--input-dir</code></td><td>Directory containing .maf files (required)</td></tr>
+      <tr><td><code class="mp-mono">--metadata-tsv</code></td><td>TSV with per-sample metadata (sample_id column must match filenames)</td></tr>
+      <tr><td><code class="mp-mono">--output, -o</code></td><td>Output TSV file (default: results.tsv)</td></tr>
+      <tr><td><code class="mp-mono">--msi-threshold</code></td><td>MSI percentage threshold (default: 20.0)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Example with metadata</h3>
+  <pre class="cli-block"><code>ec-molsubtype classify-batch \
+  --input-dir ./maf_files/ \
+  --metadata-tsv samples_metadata.tsv \
+  --output cohort_results.tsv</code></pre>
+</section>
+
+<section id="check-pole" class="mp-panel methods-section">
+  <p class="mp-section-title"><code class="mp-mono">check-pole</code></p>
+  <p>Quick lookup of a POLE variant against the curated pathogenicity database.</p>
+
+  <pre class="cli-block"><code>ec-molsubtype check-pole "p.P286R"</code></pre>
+
+  <table class="methods-table">
+    <thead><tr><th>Argument / Option</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code class="mp-mono">VARIANT_STR</code></td><td>POLE variant in HGVSp short format, e.g. <code class="mp-mono">p.P286R</code> (required)</td></tr>
+      <tr><td><code class="mp-mono">--tmb</code></td><td>Optional TMB value (mut/Mb) to evaluate secondary evidence for VUS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Examples</h3>
+  <pre class="cli-block"><code># Tier 1 hotspot
+ec-molsubtype check-pole "p.P286R"
+
+# VUS with TMB for secondary evidence check
+ec-molsubtype check-pole "p.D275G" --tmb 45.0</code></pre>
+</section>
+
+<section id="serve" class="mp-panel methods-section">
+  <p class="mp-section-title"><code class="mp-mono">serve</code></p>
+  <p>Start the web interface locally. This launches the same application you are viewing now.</p>
+
+  <pre class="cli-block"><code>ec-molsubtype serve</code></pre>
+
+  <table class="methods-table">
+    <thead><tr><th>Option</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code class="mp-mono">--host</code></td><td>Bind address (default: 0.0.0.0)</td></tr>
+      <tr><td><code class="mp-mono">--port</code></td><td>Bind port (default: $PORT or 8000)</td></tr>
+      <tr><td><code class="mp-mono">--reload</code></td><td>Auto-reload on code changes (development)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="input" class="mp-panel methods-section">
+  <p class="mp-section-title">Input formats</p>
+
+  <h3>MAF file (required)</h3>
+  <p>Tab-separated MAF format. Comment lines starting with <code class="mp-mono">#</code> are stripped. Minimum required columns:</p>
+  <div style="display: flex; flex-wrap: wrap; gap: var(--mp-space-xs); margin: var(--mp-space-sm) 0;">
+    <code class="mp-mono">Hugo_Symbol</code>
+    <code class="mp-mono">Chromosome</code>
+    <code class="mp-mono">Start_Position</code>
+    <code class="mp-mono">End_Position</code>
+    <code class="mp-mono">Reference_Allele</code>
+    <code class="mp-mono">Tumor_Seq_Allele2</code>
+    <code class="mp-mono">Variant_Classification</code>
+    <code class="mp-mono">HGVSp_Short</code>
+    <code class="mp-mono">t_alt_count</code>
+    <code class="mp-mono">t_ref_count</code>
+  </div>
+  <p>Optional: <code class="mp-mono">ClinVar_Classification</code>, <code class="mp-mono">SIFT</code>, <code class="mp-mono">PolyPhen</code></p>
+
+  <h3>Metadata sidecar (optional)</h3>
+  <p>JSON file with per-sample information. All fields are optional:</p>
+  <pre class="cli-block"><code>{
+  "sample_id": "PATIENT_01",
+  "tmb": 285.3,
+  "panel_size_mb": 1.5,
+  "msi_pct": 0.0,
+  "fraction_genome_altered": 0.05,
+  "signature_weights": {"SBS10a": 0.45, "SBS10b": 0.22}
+}</code></pre>
+
+  <h3>SEG file (optional)</h3>
+  <p>CBS segmentation output for fraction genome altered (FGA) computation. Standard 6-column format: sample, chromosome, start, end, num_probes, segment_mean.</p>
+</section>
+
+<section id="output" class="mp-panel methods-section">
+  <p class="mp-section-title">Output</p>
+
+  <h3>JSON (default)</h3>
+  <p>Full classification result with primary subtype, confidence, classification path, secondary evidence, clinical notes, and flags. Written to stdout or to file with <code class="mp-mono">-o</code>.</p>
+
+  <h3>Human-readable (<code class="mp-mono">-H</code>)</h3>
+  <p>Compact summary for quick terminal review.</p>
+
+  <h3>Batch TSV</h3>
+  <p>One row per sample with columns: sample_id, primary_subtype, confidence, flags.</p>
+</section>
+
+{% endblock %}
