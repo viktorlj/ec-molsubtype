@@ -40,6 +40,18 @@
       {% if step.variant %}
         <span class="step-variant mp-mono">{{ step.variant }}</span>
       {% endif %}
+      {% if step.tier %}
+        <span class="step-tier">tier {{ step.tier }}</span>
+      {% endif %}
+      {% if step.msi_pct is not none %}
+        <span class="step-detail mp-mono">MSI {{ step.msi_pct | round(1) }}%</span>
+      {% endif %}
+      {% if step.mmr_mutations %}
+        <span class="step-variant mp-mono">{{ step.mmr_mutations | join(", ") }}</span>
+      {% endif %}
+      {% if step.confidence %}
+        <small class="step-details">({{ step.confidence }} confidence)</small>
+      {% endif %}
       {% if step.details %}
         <small class="step-details">{{ step.details }}</small>
       {% endif %}
