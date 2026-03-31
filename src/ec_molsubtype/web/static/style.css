@@ -199,10 +199,10 @@
   transform: translateY(-1px);
 }
 
-.demo-chip.subtype-POLEmut { background: var(--st-polemut); }
-.demo-chip.subtype-MMRd    { background: var(--st-mmrd); }
-.demo-chip.subtype-p53abn  { background: var(--st-p53abn); }
-.demo-chip.subtype-NSMP    { background: var(--st-nsmp); }
+.demo-chip.subtype-POLEmut { background: var(--mp-accent); }
+.demo-chip.subtype-MMRd    { background: var(--mp-accent); }
+.demo-chip.subtype-p53abn  { background: var(--mp-accent); }
+.demo-chip.subtype-NSMP    { background: var(--mp-accent); }
 .demo-chip.demo-edge       { background: var(--mp-bg-2); color: var(--mp-ink-soft); }
 
 
